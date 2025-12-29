@@ -1,0 +1,79 @@
+<header class="top-header" style="padding:18px 18px 10px 18px;">
+  <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+    <div>
+ <!-- 로고 + 메뉴 한 줄 -->
+  <div style="display:flex; align-items:center; gap:18px;">
+    <a href="index.html" style="display:inline-flex; align-items:center;">
+      <img
+        src="assets/images/hexlogo.png"
+        alt="HEX DAO"
+        style="height:34px; display:block;"
+      />
+    </a>
+
+    <nav style="display:flex; gap:16px; font-size:16px;">
+      <a href="swap.html" style="text-decoration:none; color:#111;">토큰거래소</a>
+      <a href="treasury.html" style="text-decoration:none; color:#111;">토큰금고</a>
+    </nav>
+  </div>
+
+  <!-- 상태 텍스트는 아래 줄 -->
+  <div style="margin-top:8px; font-size:14px; color:#111;">
+    토큰 현황
+  </div>
+</div>
+
+    <!-- 지갑 연결 버튼 (기존 id 유지) -->
+    <button
+      id="btnConnect"
+      style="
+        border:1px solid #2f52ff;
+        color:#111;
+        background:#fff;
+        border-radius:10px;
+        padding:10px 16px;
+        cursor:pointer;
+      "
+    >
+      지갑연결
+    </button>
+  </div>
+
+  <!-- 상단 카드 4개 (index.js / hutdetail.js가 찾는 id 유지) -->
+  <div
+    style="
+      margin-top:10px;
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:14px;
+    "
+  >
+    <div style="border:1px solid #2f52ff; border-radius:14px; padding:16px;">
+      <div style="font-size:14px;">스테이킹 총량</div>
+      <div id="hxUsers" style="margin-top:8px; font-size:18px; font-weight:600;">-</div>
+    </div>
+
+    <div style="border:1px solid #2f52ff; border-radius:14px; padding:16px;">
+      <div style="font-size:14px;">토큰 가격</div>
+      <div id="hutPriceTop" style="margin-top:8px; font-size:18px; font-weight:600;">-</div>
+    </div>
+
+    <div style="border:1px solid #2f52ff; border-radius:14px; padding:16px;">
+      <div style="font-size:14px;">Bank TVL</div>
+      <div id="tvlTop" style="margin-top:8px; font-size:18px; font-weight:600;">-</div>
+    </div>
+
+    <div style="border:1px solid #2f52ff; border-radius:14px; padding:16px;">
+      <div style="font-size:14px;">Bank수수료 수익</div>
+      <div id="feeTop" style="margin-top:8px; font-size:14px; font-weight:600;">-</div>
+    </div>
+  </div>
+
+  <style>
+    @media (max-width: 900px) {
+      header div[style*="grid-template-columns:repeat(4"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+    }
+  </style>
+</header>

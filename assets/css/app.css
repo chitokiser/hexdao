@@ -1,0 +1,366 @@
+/* /assets/css/app.css */
+:root{
+  --bg:#ffffff;
+  --line:#2b57ff;
+  --line2:rgba(43,87,255,.25);
+  --text:#111;
+  --muted:#666;
+  --card:#fff;
+  --shadow:0 6px 18px rgba(0,0,0,.06);
+  --r:14px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans KR",sans-serif}
+a{text-decoration:none;color:inherit}
+
+.page{
+  width:min(980px, calc(100% - 28px));
+  margin:16px auto;
+}
+
+.head-wrap{
+  border:2px solid rgba(255,0,0,.4);
+  padding:14px;
+  border-radius:10px;
+  position:relative;
+}
+
+.head-inner{position:relative}
+
+.wallet-btn{
+  position:absolute;
+  right:8px;
+  top:0;
+  padding:10px 14px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:#fff;
+  box-shadow:var(--shadow);
+  cursor:pointer;
+}
+
+.head-title{
+  display:flex;
+  gap:18px;
+  align-items:baseline;
+  font-size:22px;
+  margin-bottom:8px;
+}
+
+.head-sub{
+  font-size:13px;
+  margin-top:6px;
+  margin-bottom:10px;
+}
+
+.head-cards{
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:12px;
+}
+
+.hcard{
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:14px;
+  background:var(--card);
+  box-shadow:var(--shadow);
+  min-height:78px;
+}
+
+.hcard-title{
+  font-size:13px;
+  color:var(--text);
+  margin-bottom:8px;
+}
+
+.hcard-value{
+  font-size:16px;
+  font-weight:700;
+}
+
+.hcard-value.small{
+  font-size:12px;
+  font-weight:500;
+  line-height:1.35;
+  color:#333;
+}
+
+.main-wrap{
+  border:2px solid rgba(255,0,0,.4);
+  padding:18px 14px;
+  border-radius:10px;
+  margin-top:16px;
+}
+
+.block-title{
+  font-size:14px;
+  margin:0 0 8px;
+  font-weight:700;
+}
+
+.block-text{
+  font-size:13px;
+  line-height:1.6;
+  color:#111;
+}
+
+.hr{
+  height:1px;
+  background:rgba(0,0,0,.12);
+  margin:14px 0;
+}
+
+.big-btn-row{
+  display:flex;
+  gap:12px;
+  margin-top:12px;
+}
+
+.big-btn{
+  flex:1;
+  border-radius:12px;
+  border:1px solid rgba(0,0,0,.4);
+  background:#fff;
+  padding:16px 12px;
+  font-size:20px;
+  cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,.06);
+}
+
+.swap-grid{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:14px;
+  margin-top:10px;
+}
+
+.swap-box{
+  border:1px solid rgba(0,0,0,.08);
+  border-radius:14px;
+  padding:12px;
+  background:#fff;
+}
+
+.swap-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:8px;
+}
+
+.input{
+  width:100%;
+  padding:12px 12px;
+  border-radius:10px;
+  border:1px solid rgba(0,0,0,.15);
+  outline:none;
+}
+
+.input:focus{border-color:rgba(43,87,255,.55); box-shadow:0 0 0 4px rgba(43,87,255,.12)}
+
+.swap-btn{
+  margin-top:10px;
+  width:120px;
+  padding:10px 12px;
+  border-radius:10px;
+  border:0;
+  background:var(--line);
+  color:#fff;
+  cursor:pointer;
+  font-weight:700;
+}
+
+.swap-est{
+  margin-top:8px;
+  font-size:12px;
+  color:var(--muted);
+}
+
+.status{
+  margin-top:10px;
+  border-radius:10px;
+  padding:10px 12px;
+  border:1px solid rgba(0,0,0,.12);
+  background:rgba(0,0,0,.03);
+  font-size:12px;
+  color:#333;
+}
+
+.family-title{
+  margin-top:18px;
+  font-size:14px;
+  font-weight:700;
+}
+
+.family-grid{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:12px;
+  margin-top:10px;
+}
+
+.family-btn{
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  padding:14px 12px;
+  text-align:center;
+  box-shadow:var(--shadow);
+}
+
+.footer-wrap{
+  border:2px solid rgba(255,0,0,.4);
+  padding:18px 14px;
+  border-radius:10px;
+  margin-top:16px;
+}
+
+.footer-inner{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.footer-title{font-size:14px;font-weight:800}
+.footer-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.footer-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+.footer-links a{font-size:13px}
+.footer-copy{width:100%;font-size:12px;color:var(--muted);margin-top:10px}
+
+/* swap list page */
+.table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+}
+.table th,.table td{
+  border-bottom:1px solid var(--line);
+  padding:10px 8px;
+  font-size:13px;
+  text-align:left;
+}
+.logo{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,#d4af37,#a67c00);
+  display:inline-grid;place-items:center;
+  margin-right:10px;
+  font-size:12px;color:#fff;
+}
+.row-flex{display:flex;align-items:center}
+.link{color:#111;text-decoration:underline}
+
+/* hut detail */
+.chart-box{
+  border:1px solid rgba(0,0,0,.1);
+  border-radius:10px;
+  overflow:hidden;
+  background:#000;
+}
+.chart-box img, .chart-box iframe{width:100%;height:320px;display:block}
+
+.info-split{
+  border:1px solid var(--line2);
+  border-radius:12px;
+  padding:12px;
+  margin-top:10px;
+  background:#fff;
+}
+.info-grid{
+  display:grid;
+  grid-template-columns:repeat(5, 1fr);
+  gap:10px;
+}
+.inf{
+  border:1px solid var(--line2);
+  border-radius:10px;
+  padding:10px;
+  font-size:12px;
+  background:#fff;
+}
+.inf .k{color:var(--muted);font-size:12px}
+.inf .v{margin-top:6px;font-size:13px;font-weight:700}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  margin-top:10px;
+}
+.form-box{
+  border:1px solid var(--line2);
+  border-radius:12px;
+  padding:12px;
+  background:#fff;
+}
+.form-row{display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.smallbtn{
+  padding:9px 10px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:#fff;
+  cursor:pointer;
+}
+.primarybtn{
+  padding:9px 10px;
+  border-radius:10px;
+  border:0;
+  background:var(--line);
+  color:#fff;
+  cursor:pointer;
+  font-weight:700;
+}
+
+@media(max-width:860px){
+  .head-cards{grid-template-columns:repeat(2,1fr)}
+  .swap-grid{grid-template-columns:1fr}
+  .family-grid{grid-template-columns:repeat(2,1fr)}
+  .info-grid{grid-template-columns:repeat(2,1fr)}
+  .form-grid{grid-template-columns:1fr}
+}
+
+/* /assets/css/app.css 에 아래만 추가 (맨 아래에 붙여도 됨) */
+.head-title-left{
+  font-weight:800;
+  color:#111;
+}
+
+.head-nav{
+  text-decoration:underline;
+  cursor:pointer;
+}
+.head-nav:hover{
+  opacity:.75;
+}
+
+.family-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.family-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #111;
+  color: #fff;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.family-btn:hover {
+  background: #1c1c1c;
+  transform: translateY(-2px);
+}
+
+.family-btn img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.family-btn span {
+  font-size: 14px;
+  white-space: nowrap;
+}

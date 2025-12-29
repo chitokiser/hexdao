@@ -1,0 +1,46 @@
+<!-- /treasury.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HEX DAO - 토큰금고</title>
+
+  <link rel="stylesheet" href="assets/css/app.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.14.0/dist/ethers.umd.min.js"></script>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/partials.js"></script>
+</head>
+<body>
+  <div class="page">
+    <div id="site-header"></div>
+
+    <div class="main-wrap">
+      <div class="block-title">토큰금고 (Treasury)</div>
+      <div class="block-text" style="margin-top:6px;">
+        금고 출금은 제안 → 투표(찬성/반대) → 가결 시 실행 흐름입니다.
+      </div>
+
+      <div class="hr"></div>
+
+      <!-- 섹터 컨테이너 (토큰이 늘어나면 섹터도 늘어남) -->
+      <div id="treasurySectors"></div>
+
+      <div class="status" id="statusTreasury">상태: 대기</div>
+    </div>
+
+    <div id="site-footer"></div>
+  </div>
+
+  <script>
+    (async () => { await bootPartials(); })();
+  </script>
+
+  <!-- 헤더 4카드 수치 -->
+  <script src="assets/js/header-stats.js"></script>
+
+  <!-- treasury 로직 -->
+  <script src="assets/js/treasury.js"></script>
+</body>
+</html>
