@@ -285,17 +285,17 @@
         setText("iUnstakeLeft", "-");
       }
 
-      // ROI(주간) = (이번주배당/가격)*100
+      // ROI(년간) = (이번주배당/가격)*100  (기존 코드 유지)
       let roiWeeklyPct = 0;
       try {
-        const es = BigInt(totalStaked.toString()) + 1000n;
+        const es = BigInt(totalStaked.toString());
         const div = BigInt(divisor.toString());
         if (es > 0n && div > 0n) {
           const allowPerToken = BigInt(bankHexBal.toString()) / es;
           const weeklyPerTokenWei = allowPerToken / div;
           setText("iWeekly", fmtUnits(weeklyPerTokenWei, 18, 6));
 
-          const weeklyNum = Number(ethers.formatUnits(weeklyPerTokenWei, 18));
+          const weeklyNum = Number(ethers.formatUnits(weeklyPerTokenWei, 18) * 52);
           const priceNum = Number(ethers.formatUnits(priceWei, 18));
           if (priceNum > 0 && weeklyNum > 0) roiWeeklyPct = (weeklyNum / priceNum) * 100;
         } else {
@@ -306,66 +306,57 @@
       }
       setText("iAprApy", `${trimDecimals(roiWeeklyPct.toFixed(3), 3)} %`);
 
-      // 내 시가총액/평단/손익/수익률
-      let filled = false;
+      // ==============================
+      // 여기만 수정: iMyMcap / iMyAvg / iMyRoiPct 를 "주소 넣어서" 정확히 가져오기
+      // ==============================
+
+      // 기본값
+      setText("iMyMcap", "-");
+      setText("iMyAvg", "-");
+      setText("iMyRoiPct", "-");
 
       if (_connected && _me) {
-        try {
-          const d = await bank.myDashboardSelf();
+        // 1) myDashboard(address) 우선 (가장 정확)
+        const dash = await tryReadMany(rpc, t.bank, [
+          { sig: "myDashboard(address) view returns (uint256,uint256,uint256,uint256,int256,int256)", args: [_me] }
+        ]);
+
+        if (dash.ok) {
+          const d = dash.decoded;
+
+          // 2: myMarketCapWei, 3: myAvgBuyPriceWei, 5: myRoiBps
           const myMarketCapWei = BigInt(d[2].toString());
           const myAvgBuyPriceWei = BigInt(d[3].toString());
-          const myPnlWei = BigInt(d[4].toString());
           const myRoiBps = BigInt(d[5].toString());
 
           setText("iMyMcap", fmtUnits(myMarketCapWei, 18, 6));
           setText("iMyAvg", trimDecimals(ethers.formatUnits(myAvgBuyPriceWei, 18), 6));
-          setText("iMyPnl", fmtUnits(myPnlWei, 18, 6));
+
+          // bps -> %
           setText("iMyRoiPct", `${trimDecimals((Number(myRoiBps) / 100).toFixed(2), 2)} %`);
-          filled = true;
-        } catch {
-          // continue
-        }
-      }
+        } else {
+          // 2) 개별 getter로 조합 (컨트랙트에 존재함: myMarketCap/myAvgBuyPrice/myRoiBps)
+          const [mcapRes, avgRes, roiRes] = await Promise.all([
+            tryReadMany(rpc, t.bank, [{ sig: "myMarketCap(address) view returns (uint256)", args: [_me] }]),
+            tryReadMany(rpc, t.bank, [{ sig: "myAvgBuyPrice(address) view returns (uint256)", args: [_me] }]),
+            tryReadMany(rpc, t.bank, [{ sig: "myRoiBps(address) view returns (int256)", args: [_me] }]),
+          ]);
 
-      if (!filled && _connected && _me) {
-        try {
-          const s = await bank.userStatsBase(_me);
-          const netQty = BigInt(s[0].toString());
-          const avgBuyPriceWei = BigInt(s[1].toString());
-
-          const mcapWei = netQty * BigInt(priceWei.toString());
-          const costWei = netQty * avgBuyPriceWei;
-          const pnlWei = mcapWei - costWei;
-
-          let roiPct = 0;
-          if (costWei > 0n) {
-            const m = Number(ethers.formatUnits(mcapWei, 18));
-            const c = Number(ethers.formatUnits(costWei, 18));
-            roiPct = c > 0 ? ((m - c) / c) * 100 : 0;
+          if (mcapRes.ok) {
+            const v = BigInt(mcapRes.decoded[0].toString());
+            setText("iMyMcap", fmtUnits(v, 18, 6));
           }
 
-          setText("iMyMcap", fmtUnits(mcapWei, 18, 6));
-          setText("iMyAvg", trimDecimals(ethers.formatUnits(avgBuyPriceWei, 18), 6));
-          setText("iMyPnl", fmtUnits(pnlWei, 18, 6));
-          setText("iMyRoiPct", `${trimDecimals(roiPct.toFixed(2), 2)} %`);
-          filled = true;
-        } catch {
-          // continue
-        }
-      }
+          if (avgRes.ok) {
+            const v = BigInt(avgRes.decoded[0].toString());
+            setText("iMyAvg", trimDecimals(ethers.formatUnits(v, 18), 6));
+          }
 
-      // 마지막 fallback: (지갑토큰 + depo) 기준 시가총액만이라도
-      if (!filled) {
-        if (_connected && _me) {
-          const myTotalTok = myTokWallet + depo; // 토큰 0dec
-          const mcapWei = myTotalTok * BigInt(priceWei.toString());
-          setText("iMyMcap", fmtUnits(mcapWei, 18, 6));
-        } else {
-          setText("iMyMcap", "-");
+          if (roiRes.ok) {
+            const v = BigInt(roiRes.decoded[0].toString()); // int256도 BigInt로 들어옴
+            setText("iMyRoiPct", `${trimDecimals((Number(v) / 100).toFixed(2), 2)} %`);
+          }
         }
-        setText("iMyAvg", "0");
-        setText("iMyPnl", "0");
-        setText("iMyRoiPct", "0 %");
       }
 
       // 예측가격(구매/환매)
@@ -476,7 +467,6 @@
       const signer = await p.getSigner();
       const me = await signer.getAddress();
 
-      // stake는 보통 "토큰을 bank가 transferFrom" 하므로 토큰 approve 필요
       const tok = new ethers.Contract(t.token, cfg.abis.ERC20, signer);
       await ensureApprove(tok, me, t.bank, ethers.MaxUint256);
 

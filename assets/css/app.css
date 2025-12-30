@@ -357,10 +357,15 @@ a{text-decoration:none;color:inherit}
 .family-btn img {
   width: 28px;
   height: 28px;
-  object-fit: contain;
 }
 
 .family-btn span {
   font-size: 14px;
   white-space: nowrap;
+}
+
+.family-btn.coingecko-btn img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
 }
