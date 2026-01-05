@@ -1,0 +1,299 @@
+<!-- /listing.html (또는 /intro.html) : 듀얼상장 강조 + CoinGecko/CEX 확장 + 오너십/충성고객 메시지 반영 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HEXDAO | 토큰 상장 문의</title>
+
+  <link rel="stylesheet" href="assets/css/app.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.14.0/dist/ethers.umd.min.js"></script>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/partials.js"></script>
+
+  <style>
+    /* 이 페이지 전용: app.css 스타일을 그대로 쓰되, 상단 CTA만 살짝 정리 */
+    .cta-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .cta-row a{flex:1 1 220px}
+
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      border:1px solid rgba(0,0,0,.18);
+      border-radius:999px;
+      padding:7px 10px;
+      font-size:12px;
+      background:rgba(0,0,0,.03);
+      margin-bottom:10px;
+    }
+
+    .kpi-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      margin-top:12px;
+    }
+    .kpi{
+      border:1px solid var(--line2);
+      border-radius:12px;
+      padding:12px;
+      background:#fff;
+    }
+    .kpi .n{font-size:13px;font-weight:800}
+    .kpi .d{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
+    @media(max-width:860px){
+      .kpi-grid{grid-template-columns:1fr}
+    }
+
+    /* 추가: 듀얼상장/상장확장 흐름 강조용 */
+    .flow{
+      border:1px solid var(--line2);
+      border-radius:14px;
+      padding:14px;
+      background:#fff;
+      margin-top:12px;
+    }
+    .flow .t{font-size:14px;font-weight:900;margin-bottom:6px}
+    .flow .s{font-size:12px;color:var(--muted);line-height:1.5}
+    .badge-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .badge{
+      display:inline-flex;align-items:center;
+      border:1px solid rgba(0,0,0,.14);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      background:rgba(0,0,0,.02);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div id="site-header"></div>
+
+    <div class="main-wrap" id="top">
+      <!-- HERO -->
+      <div class="pill">중소기업 Web3 상장 지원</div>
+      <div class="block-title">토큰 상장 문의</div>
+      <div class="block-text">
+        HEXDAO의 상장은 “올리고 끝”이 아닙니다.<br/>
+        실제 매출·유통·고객을 토큰 수요로 연결해,
+        상장 이후에도 성장과 가치유지가 이어지도록 운영 구조까지 설계합니다.<br/>
+        상장에서 부터 Dapp개발까지 원스톱 솔루션을 제공합니다.
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="n">Dual Listing</div>
+          <div class="d">PancakeSwap + HEXDAO DEX 동시 상장</div>
+        </div>
+        <div class="kpi">
+          <div class="n">Visibility Expand</div>
+          <div class="d">CoinGecko 등록 → 글로벌 검색/노출 확대</div>
+        </div>
+        <div class="kpi">
+          <div class="n">Capital Inflow</div>
+          <div class="d">요건 충족 시 CEX 상장으로 자금 유입 가속</div>
+        </div>
+      </div>
+
+      <div class="cta-row">
+        <a class="primarybtn" href="#why">왜 HEXDAO인가</a>
+        <a class="smallbtn" href="#dual">듀얼상장 전략</a>
+        <a class="smallbtn" href="#process">진행 절차</a>
+        <a class="smallbtn" href="#contact">상장 문의하기</a>
+      </div>
+
+      <div class="hr"></div>
+
+      <!-- WHY -->
+      <div id="why" class="block-title">1. 왜 HEXDAO로 상장해야 하나</div>
+      <div class="block-text">
+        중소기업이 체감하는 “상장 유인”을 실제 운영 관점에서 설계합니다.<br/>
+        토큰을 단기 이벤트로 쓰는 것이 아니라, 고객을 이해관계자로 전환해
+        장기 매출과 커뮤니티 성장을 만드는 구조를 제공합니다.
+      </div>
+
+      <div class="info-grid" style="margin-top:10px;">
+        <div class="inf">
+          <div class="k">자금조달 + 마케팅</div>
+          <div class="v">상장 자체가 신규 고객 유입 이벤트로 작동</div>
+        </div>
+        <div class="inf">
+          <div class="k">상장 이후 운영</div>
+          <div class="v">결제·멤버십·할인·권한 등 사용처로 토큰 수요 유지</div>
+        </div>
+        <div class="inf">
+          <div class="k">가치 유지 장치</div>
+          <div class="v">수수료/매출 환류 구조로 장기 신뢰 확보</div>
+        </div>
+        <div class="inf">
+          <div class="k">운영 부담 최소화</div>
+          <div class="v">표준 템플릿으로 운영 자동화까지 진행</div>
+        </div>
+        <div class="inf">
+          <div class="k">커뮤니티 확장</div>
+          <div class="v">회원 모집·파트너 제휴로 실사용자 확보</div>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <!-- DUAL LISTING -->
+      <div id="dual" class="block-title">2. 듀얼 상장(Dual Listing) 전략</div>
+      <div class="block-text">
+        HEXDAO 상장의 핵심은 처음부터 “듀얼 상장”으로 시작한다는 점입니다.<br/>
+        내부 생태계의 안정성과 외부 시장의 유동성을 동시에 확보해,
+        상장 직후에도 운영이 이어지는 구조를 만듭니다.
+      </div>
+
+      <div class="flow">
+        <div class="t">PancakeSwap + HEXDAO DEX 동시 상장</div>
+        <div class="s">
+          HEXDAO DEX는 프로젝트 내부 실사용/회원 기반 거래를 안정적으로 만들고,<br/>
+          PancakeSwap은 글로벌 유저에게 공개된 유동성·가격 형성 창구 역할을 합니다.<br/>
+          두 시장을 동시에 열면 “내부 신뢰 + 외부 자금 유입”이 함께 작동합니다.
+        </div>
+        <div class="badge-row">
+          <div class="badge">내부: 조합원/고객 중심 실사용</div>
+          <div class="badge">외부: 글로벌 유동성/가격 형성</div>
+          <div class="badge">가격 안정 + 노출 증가</div>
+          <div class="badge">상장 직후 운영 지속</div>
+        </div>
+      </div>
+
+      <div class="flow">
+        <div class="t">PancakeSwap 이후: CoinGecko 등록 → CEX 상장 확장</div>
+        <div class="s">
+          듀얼 상장으로 거래/홀더/유동성 기반이 형성되면 CoinGecko 등록을 통해
+          글로벌 검색·검증·추적 채널이 열립니다.<br/>
+          이후 요건이 충족되면 CEX 상장까지 확장해 법정화폐 진입과 신규 자금 유입을 가속합니다.
+        </div>
+        <div class="badge-row">
+          <div class="badge">CoinGecko: 글로벌 노출/데이터 축적</div>
+          <div class="badge">CEX: 접근성 확대</div>
+          <div class="badge">자금 유입 가속</div>
+          <div class="badge">프로젝트 신뢰 강화</div>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <!-- OWNERSHIP -->
+      <div class="block-title">3. 토큰 소유자가 “주인”이 되어 충성 고객이 됩니다</div>
+      <div class="block-text">
+        일반 고객은 가격에 민감하고 쉽게 이탈합니다.<br/>
+        하지만 토큰을 보유한 고객은 프로젝트의 성장과 성과에 관심을 갖고,
+        브랜드를 “내 것”처럼 인식합니다.<br/><br/>
+        HEXDAO는 이 변화를 설계합니다.<br/>
+        토큰 보유자는 단순한 소비자가 아니라 “이해관계자”가 되고,
+        재구매·추천·커뮤니티 참여로 이어지는 충성 고객이 됩니다.
+      </div>
+
+      <div class="info-grid" style="margin-top:10px;">
+        <div class="inf">
+          <div class="k">재구매 강화</div>
+          <div class="v">보유자가 될수록 브랜드/상품 재구매 확률 상승</div>
+        </div>
+        <div class="inf">
+          <div class="k">자발적 홍보</div>
+          <div class="v">커뮤니티 내 자발적 콘텐츠/추천이 생성</div>
+        </div>
+        <div class="inf">
+          <div class="k">이탈률 감소</div>
+          <div class="v">단기 할인보다 “장기 가치” 관점으로 이동</div>
+        </div>
+        <div class="inf">
+          <div class="k">신뢰/방어력</div>
+          <div class="v">오너십 기반 커뮤니티가 악성 이슈를 방어</div>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <!-- PROCESS -->
+      <div id="process" class="block-title">4. 상장 진행 절차</div>
+      <div class="block-text">
+        상담부터 듀얼 상장, CoinGecko 등록, 운영 자동화까지 표준 프로세스로 진행합니다.<br/>
+        준비된 자료가 없어도 업종/매출 구조/고객 흐름만으로 설계가 가능합니다.
+      </div>
+
+      <div class="info-grid" style="margin-top:10px;">
+        <div class="inf">
+          <div class="k">Step 1</div>
+          <div class="v">상담 및 사업모델 진단</div>
+        </div>
+        <div class="inf">
+          <div class="k">Step 2</div>
+          <div class="v">토큰 설계 및 조건 확정 (사용처/환류 구조 포함)</div>
+        </div>
+        <div class="inf">
+          <div class="k">Step 3</div>
+          <div class="v">컨트랙트 + HEXDAO DEX 세팅 + PancakeSwap 듀얼 상장</div>
+        </div>
+        <div class="inf">
+          <div class="k">Step 4</div>
+          <div class="v">CoinGecko 등록 및 데이터/커뮤니티 운영 강화</div>
+        </div>
+        <div class="inf">
+          <div class="k">Step 5</div>
+          <div class="v">요건 충족 시 CEX 상장 추진 → 신규 자금 유입 확대</div>
+        </div>
+        <div class="inf">
+          <div class="k">핵심 조건</div>
+          <div class="v">사용처 또는 환류 구조 1개 이상 (둘 다면 효과 극대화)</div>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <!-- CONTACT -->
+      <div id="contact" class="block-title">5. 상장 문의하기</div>
+      <div class="block-text">
+        준비된 자료가 없어도 괜찮습니다.<br/>
+        업종/매출 구조/고객 흐름만으로도 듀얼 상장 + 확장 로드맵을 설계해드립니다.
+      </div>
+
+      <div class="form-grid">
+        <div class="form-box">
+          <div class="block-title" style="margin-bottom:6px;">문의 전 준비하면 좋은 정보</div>
+          <div class="block-text">
+            - 업종/서비스 소개(짧게)<br/>
+            - 월 매출 규모(대략)<br/>
+            - 토큰 사용처 아이디어(없어도 가능)<br/>
+            - 상장 희망 일정(대략)
+          </div>
+          <div class="status" style="margin-top:10px;">
+            자료가 없어도 상담 가능하며, 대화 기반으로 설계를 도와드립니다.
+          </div>
+        </div>
+
+        <div class="form-box">
+          <div class="block-title" style="margin-bottom:6px;">바로 문의</div>
+     
+
+          <div class="form-row" style="margin-top:10px;">
+            <a class="smallbtn"
+               href="https://t.me/HexDaoDeveloper"
+               target="_blank"
+               rel="noopener">
+              상장 문의하기
+            </a>
+
+            <a class="smallbtn" href="index.html">HEXDAO 메인으로</a>
+            <a class="smallbtn" href="#top">위로</a>
+          </div>
+
+          <div class="status" style="margin-top:10px;">
+            텔레그램이 연결되면 토큰화 하려는 사업에 대해 설명해 주세요
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="site-footer"></div>
+  </div>
+</body>
+</html>
+<script src="assets/js/header-stats.js" defer></script>

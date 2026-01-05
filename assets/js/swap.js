@@ -4,6 +4,7 @@
   if (!cfg) return;
 
   const $ = (id) => document.getElementById(id);
+
   const setStatus = (t) => {
     const el = $("statusSwap");
     if (el) el.textContent = `상태: ${t}`;
@@ -17,7 +18,9 @@
     "function user(address) view returns (uint256,uint256,uint256,uint256,uint256)"
   ];
 
-  const ABI_ERC20 = ["function balanceOf(address) view returns (uint256)"];
+  const ABI_ERC20 = [
+    "function balanceOf(address) view returns (uint256)"
+  ];
 
   function isAddress(a) {
     try { return ethers.isAddress(a); } catch { return false; }
@@ -70,26 +73,16 @@
   async function addTokenToWallet(tokenKey) {
     try {
       if (!window.ethereum?.request) {
-        alert("지갑(메타마스크/라비) 확장이 필요합니다.");
+        alert("지갑 확장이 필요합니다.");
         return;
       }
 
       const list = cfg.tokens || cfg.tokenList || [];
-      const t = list.find((x) => (x.key || x.symbol) === tokenKey);
-      if (!t) {
-        alert("토큰 정보를 찾지 못했습니다.");
-        return;
-      }
+      const t = list.find(x => (x.key || x.symbol) === tokenKey);
+      if (!t) return;
 
       const tokenAddress = t.address || t.token || t.contract;
-      const tokenSymbol = t.symbol || t.key || tokenKey;
-      const tokenDecimals = (typeof t.decimals === "number") ? t.decimals : 0; // 프로젝트 기본 0
-      const tokenImage = t.icon || t.image || "";
-
-      if (!isAddress(tokenAddress)) {
-        alert(`토큰 주소가 올바르지 않습니다: ${tokenSymbol}`);
-        return;
-      }
+      if (!isAddress(tokenAddress)) return;
 
       await window.ethereum.request({
         method: "wallet_watchAsset",
@@ -97,34 +90,31 @@
           type: "ERC20",
           options: {
             address: tokenAddress,
-            symbol: tokenSymbol,
-            decimals: tokenDecimals,
-            image: tokenImage
+            symbol: t.symbol || tokenKey,
+            decimals: typeof t.decimals === "number" ? t.decimals : 0,
+            image: t.icon || ""
           }
         }
       });
     } catch (e) {
-      // 사용자가 취소한 경우도 여기로 들어옵니다.
-      console.error("wallet_watchAsset failed:", e);
+      console.error("wallet_watchAsset error", e);
     }
   }
 
-  // 전역으로 노출(HTML onclick에서 호출)
   window.HEXDAO_addTokenToWallet = addTokenToWallet;
 
   function tokenImgHtml(t) {
     const key = t.key || t.symbol || "";
     const src = t.icon || "assets/images/hexlogo.png";
-    const name = t.symbol || t.name || key || "TOKEN";
+    const name = t.symbol || t.name || key;
 
-    // img 클릭 시 토큰 추가
     return `
       <img
         src="${src}"
         alt="${name}"
         title="클릭하면 지갑에 토큰 추가"
-        onclick="window.HEXDAO_addTokenToWallet('${String(key).replace(/'/g, "\\'")}')"
-        style="width:28px;height:28px;border-radius:50%;margin-right:8px;vertical-align:middle;cursor:pointer;object-fit:cover;"
+        onclick="HEXDAO_addTokenToWallet('${key}')"
+        style="width:28px;height:28px;border-radius:50%;margin-right:8px;cursor:pointer;vertical-align:middle;object-fit:cover;"
       />
     `;
   }
@@ -133,8 +123,7 @@
     const key = t.key || `${t.symbol || "T"}_${i}`;
     t.key = key;
 
-    // tokendetail.js가 읽는 파라미터명(cfg.urlTokenParam)로 링크 생성
-    const paramName = (cfg.urlTokenParam || "token");
+    const paramName = cfg.urlTokenParam || "id";
     const href = `tokendetail.html?${encodeURIComponent(paramName)}=${encodeURIComponent(key)}`;
 
     return `
@@ -150,7 +139,7 @@
         <td style="padding:10px;" id="tvl_${key}">-</td>
 
         <td style="padding:10px;">
-          <a href="${href}">전용페이지</a>
+          <a href="${href}" class="token-detail-btn">상세 →</a>
         </td>
       </tr>
     `;
@@ -161,7 +150,7 @@
   }
 
   function buildTable() {
-    const tbody = $("swapRows") || $("tokenRows");
+    const tbody = $("swapRows");
     if (!tbody) return;
     tbody.innerHTML = getTokenList().map(rowHtml).join("");
   }
@@ -179,16 +168,12 @@
   function calcEstApr(hb, staked, divisor, priceWei) {
     try {
       const ts = BigInt(staked.toString());
-      const p = BigInt(priceWei.toString());
-      const dv = BigInt(divisor.toString());
-      const H = BigInt(hb.toString());
-      if (ts === 0n || p === 0n || dv === 0n) return "-";
+      if (ts === 0n) return "-";
 
-      const weeklyPerToken = (H / ts) / dv;
-      const annualPerToken = weeklyPerToken * 52n;
-
-      const aprScaled = (annualPerToken * 10000n) / p; // 2 decimals
-      return `${Number(aprScaled) / 100}%`;
+      const weekly = (BigInt(hb) / ts) / BigInt(divisor);
+      const annual = weekly * 52n;
+      const apr = (annual * 10000n) / BigInt(priceWei);
+      return `${Number(apr) / 100}%`;
     } catch {
       return "-";
     }
@@ -196,28 +181,22 @@
 
   function calcMyApr(weeklyWei, depo, priceWei) {
     try {
-      const w = BigInt(weeklyWei.toString());
-      const d = BigInt(depo.toString());
-      const p = BigInt(priceWei.toString());
-      if (w === 0n || d === 0n || p === 0n) return "-";
-
-      const annual = w * 52n;
-      const invested = d * p;
+      const annual = BigInt(weeklyWei) * 52n;
+      const invested = BigInt(depo) * BigInt(priceWei);
       if (invested === 0n) return "-";
-
-      const aprScaled = (annual * 10000n) / invested;
-      return `${Number(aprScaled) / 100}%`;
+      const apr = (annual * 10000n) / invested;
+      return `${Number(apr) / 100}%`;
     } catch {
       return "-";
     }
   }
 
   async function refreshToken(rpc, t, myAddr) {
-    const key = t.key;
     if (!isAddress(t.bank) || !isAddress(cfg.contracts?.hex)) return;
 
     const bank = new ethers.Contract(t.bank, ABI_BANK, rpc);
     const hex = new ethers.Contract(cfg.contracts.hex, ABI_ERC20, rpc);
+    const key = t.key;
 
     try {
       const [priceRaw, totalStaked, hb] = await Promise.all([
@@ -227,36 +206,26 @@
       ]);
 
       const priceWei = normalizePriceWei(priceRaw);
-
-      const elPrice = $("price_" + key);
-      const elStaked = $("staked_" + key);
-      const elTvl = $("tvl_" + key);
-      const elRoi = $("roi_" + key);
-
-      if (elPrice) elPrice.textContent = fmtPriceDisplay(priceRaw) + " HEX";
-      if (elStaked) elStaked.textContent = totalStaked.toString();
-      if (elTvl) elTvl.textContent = fmt18(hb) + " HEX";
-
       const divisor = await readDivisor(bank);
-      const est = calcEstApr(hb, totalStaked, divisor, priceWei);
+      let roi = calcEstApr(hb, totalStaked, divisor, priceWei);
 
-      let roi = est;
       if (myAddr) {
         try {
           const [u, weekly] = await Promise.all([
             bank.user(myAddr),
             bank.pendingDividend(myAddr)
           ]);
-          const depo = BigInt((u?.depo ?? u?.[2] ?? 0).toString());
-          roi = depo > 0n ? calcMyApr(weekly, depo, priceWei) : est;
-        } catch {
-          roi = est;
-        }
+          const depo = BigInt(u?.[2] ?? 0);
+          if (depo > 0n) roi = calcMyApr(weekly, depo, priceWei);
+        } catch {}
       }
 
-      if (elRoi) elRoi.textContent = roi || "-";
+      $("price_" + key).textContent = fmtPriceDisplay(priceRaw) + " HEX";
+      $("staked_" + key).textContent = totalStaked.toString();
+      $("tvl_" + key).textContent = fmt18(hb) + " HEX";
+      $("roi_" + key).textContent = roi;
     } catch (e) {
-      console.error("swap refresh error:", key, e);
+      console.error("refresh error:", key, e);
     }
   }
 
@@ -277,8 +246,8 @@
     setInterval(refreshAll, 8000);
 
     if (window.ethereum) {
-      window.ethereum.on?.("accountsChanged", () => refreshAll());
-      window.ethereum.on?.("chainChanged", () => refreshAll());
+      ethereum.on?.("accountsChanged", refreshAll);
+      ethereum.on?.("chainChanged", refreshAll);
     }
   }
 
