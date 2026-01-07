@@ -1,4 +1,15 @@
-<header class="top-header" style="padding:18px 18px 10px 18px;">
+<!-- /partials/head.html -->
+<header
+  class="top-header"
+  style="
+    padding:18px 18px 12px 18px;
+    background:rgba(255,255,255,.75);
+    border:1px solid rgba(15,23,42,.10);
+    border-radius:18px;
+    box-shadow:0 10px 30px rgba(15,23,42,.08);
+    backdrop-filter:saturate(140%) blur(10px);
+  "
+>
   <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
     <div style="flex:1; min-width:0;">
       <!-- 로고 + (데스크탑) 메뉴 + (모바일) 햄버거 -->
@@ -13,9 +24,41 @@
           </a>
 
           <!-- 데스크탑 네비 -->
-          <nav id="topNavDesktop" style="display:flex; gap:16px; font-size:clamp(13px, 2.2vw, 16px);">
-            <a href="swap.html" style="text-decoration:none; color:#111;">토큰거래소</a>
-            <a href="treasury.html" style="text-decoration:none; color:#111;">토큰금고</a>
+          <nav
+            id="topNavDesktop"
+            style="
+              display:flex;
+              gap:10px;
+              font-size:clamp(13px, 2.2vw, 15px);
+              color:rgba(15,23,42,.72);
+              align-items:center;
+            "
+          >
+            <a
+              href="swap.html"
+              style="
+                text-decoration:none;
+                color:inherit;
+                padding:8px 10px;
+                border-radius:12px;
+                transition:all .18s ease;
+              "
+              onmouseover="this.style.background='rgba(15,23,42,.05)'; this.style.color='rgba(15,23,42,.92)'"
+              onmouseout="this.style.background='transparent'; this.style.color='inherit'"
+            >토큰거래소</a>
+
+            <a
+              href="treasury.html"
+              style="
+                text-decoration:none;
+                color:inherit;
+                padding:8px 10px;
+                border-radius:12px;
+                transition:all .18s ease;
+              "
+              onmouseover="this.style.background='rgba(15,23,42,.05)'; this.style.color='rgba(15,23,42,.92)'"
+              onmouseout="this.style.background='transparent'; this.style.color='inherit'"
+            >토큰금고</a>
           </nav>
         </div>
 
@@ -26,25 +69,38 @@
           aria-expanded="false"
           style="
             display:none;
-            border:1px solid #2f52ff;
-            background:#fff;
-            border-radius:10px;
-            padding:10px 12px;
+            width:42px;
+            height:42px;
+            border:1px solid rgba(15,23,42,.12);
+            background:rgba(255,255,255,.90);
+            border-radius:14px;
             cursor:pointer;
             line-height:0;
+            box-shadow:0 10px 22px rgba(15,23,42,.08);
           "
         >
-          <!-- 아이콘(3줄) -->
-          <span style="display:inline-block; width:22px; height:16px; position:relative;">
-            <i style="position:absolute; left:0; top:0; width:100%; height:2px; background:#111;"></i>
-            <i style="position:absolute; left:0; top:7px; width:100%; height:2px; background:#111;"></i>
-            <i style="position:absolute; left:0; top:14px; width:100%; height:2px; background:#111;"></i>
+          <span style="display:inline-block; width:20px; height:16px; position:relative;">
+            <i style="position:absolute; left:0; top:0; width:100%; height:2px; background:rgba(15,23,42,.82); border-radius:2px;"></i>
+            <i style="position:absolute; left:0; top:7px; width:100%; height:2px; background:rgba(15,23,42,.82); border-radius:2px;"></i>
+            <i style="position:absolute; left:0; top:14px; width:100%; height:2px; background:rgba(15,23,42,.82); border-radius:2px;"></i>
           </span>
         </button>
       </div>
 
-      <!-- 상태 텍스트는 아래 줄 -->
-      <div id="headerStatusText" style="margin-top:8px; font-size:clamp(12px, 2vw, 14px); color:#111;">
+      <!-- 상태 텍스트 (지갑/온체인 표시) -->
+      <div
+        id="headerStatusText"
+        style="
+          margin-top:10px;
+          font-size:clamp(12px, 2vw, 13px);
+          color:rgba(15,23,42,.82);
+          border:1px solid rgba(15,23,42,.10);
+          background:rgba(255,255,255,.88);
+          border-radius:14px;
+          padding:10px 12px;
+          line-height:1.25;
+        "
+      >
         HEX DAO현황
       </div>
 
@@ -54,18 +110,33 @@
         style="
           display:none;
           margin-top:10px;
-          border:1px solid rgba(0,0,0,.12);
-          border-radius:12px;
-          background:#fff;
+          border:1px solid rgba(15,23,42,.10);
+          border-radius:16px;
+          background:rgba(255,255,255,.92);
           overflow:hidden;
+          box-shadow:0 12px 26px rgba(15,23,42,.06);
         "
       >
-        <a href="swap.html" style="display:block; padding:12px 12px; color:#111; text-decoration:none; border-bottom:1px solid rgba(0,0,0,.08);">
-          토큰거래소
-        </a>
-        <a href="treasury.html" style="display:block; padding:12px 12px; color:#111; text-decoration:none;">
-          토큰금고
-        </a>
+        <a
+          href="swap.html"
+          style="
+            display:block;
+            padding:12px 12px;
+            color:rgba(15,23,42,.86);
+            text-decoration:none;
+            border-bottom:1px solid rgba(15,23,42,.08);
+          "
+        >토큰거래소</a>
+
+        <a
+          href="treasury.html"
+          style="
+            display:block;
+            padding:12px 12px;
+            color:rgba(15,23,42,.86);
+            text-decoration:none;
+          "
+        >토큰금고</a>
       </div>
     </div>
 
@@ -73,117 +144,118 @@
     <button
       id="btnConnect"
       style="
-        border:1px solid #2f52ff;
-        color:#111;
-        background:#fff;
-        border-radius:10px;
-        padding:10px 16px;
+        border:1px solid rgba(43,87,255,.35);
+        color:rgba(15,23,42,.92);
+        background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.75));
+        border-radius:999px;
+        padding:10px 14px;
         cursor:pointer;
-        font-size:clamp(13px, 2.2vw, 15px);
+        font-size:clamp(13px, 2.2vw, 14px);
         white-space:nowrap;
+        box-shadow:0 10px 24px rgba(43,87,255,.10);
+        transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
       "
+      onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 14px 34px rgba(43,87,255,.14)'; this.style.borderColor='rgba(43,87,255,.55)'"
+      onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 24px rgba(43,87,255,.10)'; this.style.borderColor='rgba(43,87,255,.35)'"
     >
       지갑연결
     </button>
   </div>
 
-  <!-- 상단 카드 (id 유지 + Vault USDT 추가) -->
+  <!-- 상단 KPI 카드 -->
   <div
     id="top-cards"
     style="
-      margin-top:10px;
+      margin-top:12px;
       display:grid;
       grid-template-columns:repeat(5, minmax(0,1fr));
-      gap:14px;
+      gap:12px;
     "
   >
-    <div style="border:1px solid #2f52ff; border-radius:14px; padding:16px;">
-      <div style="font-size:clamp(12px, 1.8vw, 14px);">스테이킹 총량</div>
-      <div id="hxUsers"
-           style="
-             margin-top:8px;
-             font-size:clamp(14px, 2.4vw, 18px);
-             font-weight:600;
-             line-height:1.2;
-             white-space:nowrap;
-             overflow:hidden;
-             text-overflow:ellipsis;
-           ">-</div>
+    <div
+      style="
+        border:1px solid rgba(15,23,42,.10);
+        border-radius:18px;
+        padding:14px 14px;
+        background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.86));
+        box-shadow:0 12px 28px rgba(15,23,42,.06);
+        min-height:82px;
+      "
+    >
+      <div style="font-size:12px; color:rgba(15,23,42,.55); letter-spacing:.2px;">스테이킹 총량</div>
+      <div id="hxUsers" class="onchain" style="margin-top:10px; font-size:16px; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">-</div>
     </div>
 
-    <div style="border:1px solid #2f52ff; border-radius:14px; padding:16px;">
-      <div style="font-size:clamp(12px, 1.8vw, 14px);">HUT 가격</div>
-      <div id="hutPriceTop"
-           style="
-             margin-top:8px;
-             font-size:clamp(14px, 2.4vw, 18px);
-             font-weight:600;
-             line-height:1.2;
-             white-space:nowrap;
-             overflow:hidden;
-             text-overflow:ellipsis;
-           ">-</div>
+    <div
+      style="
+        border:1px solid rgba(15,23,42,.10);
+        border-radius:18px;
+        padding:14px 14px;
+        background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.86));
+        box-shadow:0 12px 28px rgba(15,23,42,.06);
+        min-height:82px;
+      "
+    >
+      <div style="font-size:12px; color:rgba(15,23,42,.55); letter-spacing:.2px;">HUT 가격</div>
+      <div id="hutPriceTop" class="onchain" style="margin-top:10px; font-size:16px; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">-</div>
     </div>
 
-    <div style="border:1px solid #2f52ff; border-radius:14px; padding:16px;">
-      <div style="font-size:clamp(12px, 1.8vw, 14px);">TVL</div>
-      <div id="tvlTop"
-           style="
-             margin-top:8px;
-             font-size:clamp(14px, 2.4vw, 18px);
-             font-weight:600;
-             line-height:1.2;
-             white-space:nowrap;
-             overflow:hidden;
-             text-overflow:ellipsis;
-           ">-</div>
+    <div
+      style="
+        border:1px solid rgba(15,23,42,.10);
+        border-radius:18px;
+        padding:14px 14px;
+        background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.86));
+        box-shadow:0 12px 28px rgba(15,23,42,.06);
+        min-height:82px;
+      "
+    >
+      <div style="font-size:12px; color:rgba(15,23,42,.55); letter-spacing:.2px;">TVL</div>
+      <div id="tvlTop" class="onchain" style="margin-top:10px; font-size:16px; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">-</div>
     </div>
 
-    <div style="border:1px solid #2f52ff; border-radius:14px; padding:16px;">
-      <div style="font-size:clamp(12px, 1.8vw, 14px);">수수료 수익</div>
-      <div id="feeTop"
-           style="
-             margin-top:8px;
-             font-size:clamp(14px, 2.4vw, 18px);
-             font-weight:600;
-             line-height:1.2;
-             white-space:nowrap;
-             overflow:hidden;
-             text-overflow:ellipsis;
-           ">-</div>
+    <div
+      style="
+        border:1px solid rgba(15,23,42,.10);
+        border-radius:18px;
+        padding:14px 14px;
+        background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.86));
+        box-shadow:0 12px 28px rgba(15,23,42,.06);
+        min-height:82px;
+      "
+    >
+      <div style="font-size:12px; color:rgba(15,23,42,.55); letter-spacing:.2px;">수수료 수익</div>
+      <div id="feeTop" class="onchain" style="margin-top:10px; font-size:16px; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">-</div>
     </div>
 
-    <div style="border:1px solid #2f52ff; border-radius:14px; padding:16px;">
-      <div style="font-size:clamp(12px, 1.8vw, 14px);">Vault USDT 잔고</div>
-      <div id="vaultUsdtTop"
-           style="
-             margin-top:8px;
-             font-size:clamp(14px, 2.4vw, 18px);
-             font-weight:600;
-             line-height:1.2;
-             white-space:nowrap;
-             overflow:hidden;
-             text-overflow:ellipsis;
-           ">-</div>
+    <div
+      style="
+        border:1px solid rgba(15,23,42,.10);
+        border-radius:18px;
+        padding:14px 14px;
+        background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.86));
+        box-shadow:0 12px 28px rgba(15,23,42,.06);
+        min-height:82px;
+      "
+    >
+      <div style="font-size:12px; color:rgba(15,23,42,.55); letter-spacing:.2px;">Vault USDT 잔고</div>
+      <div id="vaultUsdtTop" class="onchain" style="margin-top:10px; font-size:16px; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">-</div>
     </div>
   </div>
 
   <style>
-    /* 모바일 카드 레이아웃 */
-    @media (max-width: 900px) {
+    @media (max-width: 980px) {
       #top-cards {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
       }
     }
 
-    /* 아주 작은 화면에서 padding/간격 조금 축소 */
     @media (max-width: 420px) {
-      .top-header { padding: 14px 14px 8px 14px !important; }
+      .top-header { padding: 14px 14px 10px 14px !important; }
       #top-cards { gap: 10px !important; }
       #top-cards > div { padding: 12px !important; }
     }
 
-    /* 햄버거 표시/데스크탑 메뉴 숨김 */
     @media (max-width: 700px) {
       #topNavDesktop { display: none !important; }
       #hamburgerBtn { display: inline-flex !important; align-items:center; justify-content:center; }
@@ -206,12 +278,10 @@
         setOpen(!open);
       });
 
-      // 화면이 커지면 자동 닫기
       window.addEventListener("resize", function () {
         if (window.innerWidth > 700) setOpen(false);
       });
 
-      // 바깥 클릭하면 닫기
       document.addEventListener("click", function (e) {
         if (window.innerWidth > 700) return;
         if (!mobileNav.contains(e.target) && !btn.contains(e.target)) setOpen(false);
