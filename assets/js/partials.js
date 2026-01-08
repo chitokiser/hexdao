@@ -27,8 +27,8 @@ async function loadPartial(targetId, url) {
 }
 
 async function bootPartials() {
-  await loadPartial("site-header", "partials/head.html");
-  await loadPartial("site-footer", "partials/footer.html");
+  await loadPartial("site-header", "/partials/head.html");
+  await loadPartial("site-footer", "/partials/footer.html");
 
   // 헤더/푸터 로드 완료 이벤트
   window.dispatchEvent(new CustomEvent("partials:loaded"));

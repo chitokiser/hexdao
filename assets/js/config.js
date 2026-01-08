@@ -87,7 +87,7 @@
       token: ADDR.hut,
       bank: ADDR.hutbank,
       treasury: ADDR.hutTreasury,
-      icon: "assets/images/tokens/hut.png",
+      icon: "/assets/images/tokens/hut.png",
       decimals: 0
     },
     {
@@ -97,7 +97,7 @@
       token: ADDR.put,
       bank: ADDR.putbank,
       treasury: ADDR.putTreasury,
-      icon: "assets/images/tokens/put.png",
+      icon: "/assets/images/tokens/put.png",
       decimals: 0
     },
     {
@@ -107,7 +107,7 @@
       token: ADDR.but,
       bank: ADDR.butbank,
       treasury: ADDR.butTreasury,
-      icon: "assets/images/tokens/but.png",
+      icon: "/assets/images/tokens/but.png",
       decimals: 0
     },
     {
@@ -117,7 +117,7 @@
       token: ADDR.exp,
       bank: ADDR.expbank,
       treasury: ADDR.expTreasury,
-      icon: "assets/images/tokens/exp.png",
+      icon: "/assets/images/tokens/exp.png",
       decimals: 0
     },
     {
@@ -127,7 +127,7 @@
       token: ADDR.vet,
       bank: ADDR.vetbank,
       treasury: ADDR.vetTreasury,
-      icon: "assets/images/tokens/vet.png",
+      icon: "/assets/images/tokens/vet.png",
       decimals: 0
     },
   ];
