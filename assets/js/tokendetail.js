@@ -1,4 +1,4 @@
-// /assets/js/tokendetail.js
+// /assets/js/tokendetail.js  (전체 교체)
 (() => {
   const cfg = window.HEXDAO_CONFIG;
   if (!cfg) return;
@@ -229,16 +229,13 @@
       }
 
       // 내 잔고
-      let myTokWallet = 0n;
       if (_connected && _me) {
-        const [mh, mu, mt] = await Promise.all([
+        const [mh, mu] = await Promise.all([
           hex.balanceOf(_me),
-          usdt.balanceOf(_me),
-          token.balanceOf(_me)
+          usdt.balanceOf(_me)
         ]);
         setText("iMyHex", fmtUnits(mh, decHEX, 6));
         setText("iMyUsdt", fmtUnits(mu, decUSDT, 6));
-        myTokWallet = BigInt(mt.toString());
       } else {
         setText("iMyHex", "-");
         setText("iMyUsdt", "-");
@@ -285,7 +282,7 @@
         setText("iUnstakeLeft", "-");
       }
 
-      // ROI(년간) = (이번주배당/가격)*100  (기존 코드 유지)
+      // ROI(년간) = (이번주배당/가격)*100
       let roiWeeklyPct = 0;
       try {
         const es = BigInt(totalStaked.toString());
@@ -306,56 +303,35 @@
       }
       setText("iAprApy", `${trimDecimals(roiWeeklyPct.toFixed(3), 3)} %`);
 
-      // ==============================
-      // 여기만 수정: iMyMcap / iMyAvg / iMyRoiPct 를 "주소 넣어서" 정확히 가져오기
-      // ==============================
-
-      // 기본값
+      // 내 시총/평단/수익률
       setText("iMyMcap", "-");
       setText("iMyAvg", "-");
       setText("iMyRoiPct", "-");
 
       if (_connected && _me) {
-        // 1) myDashboard(address) 우선 (가장 정확)
         const dash = await tryReadMany(rpc, t.bank, [
           { sig: "myDashboard(address) view returns (uint256,uint256,uint256,uint256,int256,int256)", args: [_me] }
         ]);
 
         if (dash.ok) {
           const d = dash.decoded;
-
-          // 2: myMarketCapWei, 3: myAvgBuyPriceWei, 5: myRoiBps
           const myMarketCapWei = BigInt(d[2].toString());
           const myAvgBuyPriceWei = BigInt(d[3].toString());
           const myRoiBps = BigInt(d[5].toString());
 
           setText("iMyMcap", fmtUnits(myMarketCapWei, 18, 6));
           setText("iMyAvg", trimDecimals(ethers.formatUnits(myAvgBuyPriceWei, 18), 6));
-
-          // bps -> %
           setText("iMyRoiPct", `${trimDecimals((Number(myRoiBps) / 100).toFixed(2), 2)} %`);
         } else {
-          // 2) 개별 getter로 조합 (컨트랙트에 존재함: myMarketCap/myAvgBuyPrice/myRoiBps)
           const [mcapRes, avgRes, roiRes] = await Promise.all([
             tryReadMany(rpc, t.bank, [{ sig: "myMarketCap(address) view returns (uint256)", args: [_me] }]),
             tryReadMany(rpc, t.bank, [{ sig: "myAvgBuyPrice(address) view returns (uint256)", args: [_me] }]),
             tryReadMany(rpc, t.bank, [{ sig: "myRoiBps(address) view returns (int256)", args: [_me] }]),
           ]);
 
-          if (mcapRes.ok) {
-            const v = BigInt(mcapRes.decoded[0].toString());
-            setText("iMyMcap", fmtUnits(v, 18, 6));
-          }
-
-          if (avgRes.ok) {
-            const v = BigInt(avgRes.decoded[0].toString());
-            setText("iMyAvg", trimDecimals(ethers.formatUnits(v, 18), 6));
-          }
-
-          if (roiRes.ok) {
-            const v = BigInt(roiRes.decoded[0].toString()); // int256도 BigInt로 들어옴
-            setText("iMyRoiPct", `${trimDecimals((Number(v) / 100).toFixed(2), 2)} %`);
-          }
+          if (mcapRes.ok) setText("iMyMcap", fmtUnits(BigInt(mcapRes.decoded[0].toString()), 18, 6));
+          if (avgRes.ok) setText("iMyAvg", trimDecimals(ethers.formatUnits(BigInt(avgRes.decoded[0].toString()), 18), 6));
+          if (roiRes.ok) setText("iMyRoiPct", `${trimDecimals((Number(BigInt(roiRes.decoded[0].toString())) / 100).toFixed(2), 2)} %`);
         }
       }
 
@@ -429,21 +405,46 @@
     const t = cfg.tokenMap[tokenKey];
     if (!t) return;
 
-    const amt = parseIntSafe($("inpSellAmt")?.value);
-    if (amt <= 0) return setStatus("환매 수량을 입력하세요.");
+    const amtInput = parseIntSafe($("inpSellAmt")?.value);
+    if (amtInput <= 0) return setStatus("환매 수량을 입력하세요.");
 
     try {
       const p = await getBrowserProvider();
       await p.send("eth_requestAccounts", []);
       const signer = await p.getSigner();
+      const me = await signer.getAddress();
 
+      // ✅ 핵심 1) sell은 보통 "토큰을 bank가 가져감" => token approve 필요
+      const tok = new ethers.Contract(t.token, cfg.abis.ERC20, signer);
+
+      // decimals 대응 (0이면 그대로, 아니면 parseUnits)
+      let decTOKEN = 0;
+      try { decTOKEN = Number(await tok.decimals()); } catch { decTOKEN = t.decimals ?? 0; }
+
+      const amt =
+        decTOKEN === 0
+          ? BigInt(amtInput)
+          : ethers.parseUnits(String(amtInput), decTOKEN);
+
+      await ensureApprove(tok, me, t.bank, ethers.MaxUint256);
+
+      // ✅ 핵심 2) sell 시그니처가 2파라미터인 경우도 커버
       const sellSigs = [
         "sell(uint256 amount)",
-        "sellToken(uint256 amount)"
+        "sellToken(uint256 amount)",
+        "sell(uint256 amount,uint256 minRecv)",
+        "sell(uint256 amount,uint256 minHex)",
+        "sellToken(uint256 amount,uint256 minRecv)",
+        "sellToken(uint256 amount,uint256 minHex)"
       ];
 
-      const res = await trySend(signer, t.bank, sellSigs, () => [amt]);
-      if (!res.ok) return setStatus("환매 실패: sell 함수가 컨트랙트와 다릅니다.");
+      const res = await trySend(signer, t.bank, sellSigs, (sig) => {
+        // 2개 파라미터면 minRecv/minHex = 0 으로 처리
+        if (sig.includes(",")) return [amt, 0];
+        return [amt];
+      });
+
+      if (!res.ok) return setStatus("환매 실패: sell 함수 시그니처가 컨트랙트와 다릅니다(또는 내부 require revert).");
 
       setStatus(`환매 완료: ${res.hash}`);
       await refreshAll();
