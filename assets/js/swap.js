@@ -105,7 +105,7 @@
 
   function tokenImgHtml(t) {
     const key = t.key || t.symbol || "";
-    const src = t.icon || "assets/images/hexlogo.png";
+    const src = t.icon || "/assets/images/hexlogo.png";
     const name = t.symbol || t.name || key;
 
     return `
