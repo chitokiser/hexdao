@@ -96,8 +96,59 @@
   async function ensureApprove(erc20, owner, spender, needAmount) {
     const cur = await erc20.allowance(owner, spender);
     if (cur >= needAmount) return;
-    const tx = await erc20.approve(spender, ethers.MaxUint256);
-    await tx.wait();
+
+    try {
+      const tx1 = await erc20.approve(spender, ethers.MaxUint256);
+      await tx1.wait();
+      return;
+    } catch {
+      try {
+        const tx0 = await erc20.approve(spender, 0);
+        await tx0.wait();
+      } catch {}
+      const tx2 = await erc20.approve(spender, ethers.MaxUint256);
+      await tx2.wait();
+    }
+  }
+
+  async function runAllowanceCheck() {
+    const tokenKey = getTokenKeyFromUrl();
+    const t = cfg.tokenMap[tokenKey];
+    if (!t) return;
+
+    try {
+      const p = await getBrowserProvider();
+      await p.send("eth_requestAccounts", []);
+      const signer = await p.getSigner();
+      const me = await signer.getAddress();
+
+      const hex = new ethers.Contract(cfg.contracts.hex, cfg.abis.ERC20, signer);
+      const tok = new ethers.Contract(t.token, cfg.abis.ERC20, signer);
+
+      let decHEX = cfg.decimals?.HEX ?? 18;
+      try { decHEX = Number(await hex.decimals()); } catch {}
+
+      let decTOKEN = t.decimals ?? 0;
+      try { decTOKEN = Number(await tok.decimals()); } catch {}
+
+      const [aHex, aTok] = await Promise.all([
+        hex.allowance(me, t.bank),
+        tok.allowance(me, t.bank)
+      ]);
+
+      setText("iAllowHex", fmtUnits(aHex, decHEX, 6));
+      setText("iAllowTok", decTOKEN === 0 ? aTok.toString() : fmtUnits(aTok, decTOKEN, 6));
+
+      const hint = $("allowanceHint");
+      if (hint) {
+        hint.textContent = "안내: 구매는 HEX 승인, 환매/스테이킹은 Token 승인이 필요합니다. 부족하면 지갑에서 approve를 먼저 완료한 뒤 실행하세요.";
+      }
+
+      setStatus("allowance 확인 완료");
+    } catch (e) {
+      console.error(e);
+      setStatus(`allowance 확인 실패: ${e?.shortMessage || e?.message || e}`);
+    }
   }
 
   async function trySend(signer, to, sigList, argsBuilder) {
@@ -110,15 +161,13 @@
         const tx = await signer.sendTransaction({ to, data });
         await tx.wait();
         return { ok: true, sig, hash: tx.hash };
-      } catch (e) {
-        // 다음 후보 시도
-      }
+      } catch {}
     }
     return { ok: false };
   }
 
-  const DIV_INTERVAL_SEC = 7 * 24 * 60 * 60;   // 7 days
-  const STAKE_LOCK_SEC = 120 * 24 * 60 * 60;   // 120 days
+  const DIV_INTERVAL_SEC = 7 * 24 * 60 * 60;
+  const STAKE_LOCK_SEC = 120 * 24 * 60 * 60;
 
   let _timer = null;
   let _connected = false;
@@ -152,8 +201,8 @@
 
     if (sellAmt > 0 && priceWei > 0n) {
       const gross = BigInt(sellAmt) * priceWei;
-      const feeBps = BigInt(Math.round(Number(sellFeePct) * 100)); // % -> bps*100
-      const feeWei = (gross * feeBps) / 10000n; // (bps*100)/10000 => %
+      const feeBps = BigInt(Math.round(Number(sellFeePct) * 100));
+      const feeWei = (gross * feeBps) / 10000n;
       const recv = gross - feeWei;
       setText("sellEst", `${fmtUnits(recv, 18, 6)} HEX`);
     } else {
@@ -182,7 +231,6 @@
       const token = new ethers.Contract(t.token, cfg.abis.ERC20, rpc);
       const bank = new ethers.Contract(t.bank, cfg.abis.BANK_READ, rpc);
 
-      // 계약 잔고
       const [bankHexBal, bankTokBal] = await Promise.all([
         hex.balanceOf(t.bank),
         token.balanceOf(t.bank)
@@ -191,7 +239,6 @@
       setText("iHEXBAL", fmtUnits(bankHexBal, decHEX, 6));
       setText("iBAL", decTOKEN === 0 ? bankTokBal.toString() : fmtUnits(bankTokBal, decTOKEN, 6));
 
-      // 가격/수수료/스테이킹
       const [priceWei, totalStaked, divisor, totalfee] = await Promise.all([
         bank.price(),
         bank.totalStaked(),
@@ -199,11 +246,27 @@
         bank.totalfee().catch(() => 0n)
       ]);
 
+      // 구매가능 캡: effectiveStaked의 1/10 (컨트랙트 buy cap과 동일)
+      let effStaked = BigInt(totalStaked.toString());
+      const effRes = await tryReadMany(rpc, t.bank, [
+        { sig: "effectiveStaked() view returns (uint256)" },
+        { sig: "virtualStaked() view returns (uint256)" }
+      ]);
+      if (effRes.ok) {
+        if (effRes.sig && effRes.sig.startsWith("effectiveStaked")) {
+          effStaked = BigInt(effRes.decoded[0].toString());
+        } else {
+          const v = BigInt(effRes.decoded[0].toString());
+          effStaked = BigInt(totalStaked.toString()) + v;
+        }
+      }
+      const buyCap = effStaked / 10n;
+      if ($("iBuyCap")) setText("iBuyCap", buyCap.toString());
+
       setText("iPrice", trimDecimals(ethers.formatUnits(priceWei, 18), 6));
       if ($("iFee")) setText("iFee", fmtUnits(totalfee, 18, 6));
       if ($("iTotalStaked")) setText("iTotalStaked", totalStaked.toString());
 
-      // 매도 수수료(rate 우선, 없으면 3%)
       let sellFeePct = 3;
       const rateRes = await tryReadMany(rpc, t.bank, [
         { sig: "rate() view returns (uint8)" },
@@ -216,7 +279,6 @@
       }
       setText("iSellFee", `${sellFeePct} %`);
 
-      // 자동스테이크비율
       const autoRes = await tryReadMany(rpc, t.bank, [
         { sig: "autoStakeBps() view returns (uint16)" },
         { sig: "autoStake() view returns (uint256)" }
@@ -228,7 +290,6 @@
         if ($("iAutoStakeBps")) setText("iAutoStakeBps", "-");
       }
 
-      // 내 잔고
       if (_connected && _me) {
         const [mh, mu] = await Promise.all([
           hex.balanceOf(_me),
@@ -241,7 +302,6 @@
         setText("iMyUsdt", "-");
       }
 
-      // user()
       let totalBuy = 0n, depo = 0n, stakingTime = 0n, lastClaim = 0n;
       if (_connected && _me) {
         const u = await bank.user(_me);
@@ -259,7 +319,6 @@
         setText("iDepo", "-");
       }
 
-      // 이번에 배당받을 HEX
       if (_connected && _me) {
         const claimable = await bank.pendingDividend(_me);
         setText("iallow", fmtUnits(claimable, 18, 6));
@@ -267,7 +326,6 @@
         setText("iallow", "-");
       }
 
-      // 남은 시간들
       if (_connected && _me && lastClaim > 0n) {
         const left = (Number(lastClaim) + DIV_INTERVAL_SEC) - nowSec();
         setText("iClaimLeft", fmtTimeLeft(left));
@@ -282,7 +340,6 @@
         setText("iUnstakeLeft", "-");
       }
 
-      // ROI(년간) = (이번주배당/가격)*100
       let roiWeeklyPct = 0;
       try {
         const es = BigInt(totalStaked.toString());
@@ -303,7 +360,6 @@
       }
       setText("iAprApy", `${trimDecimals(roiWeeklyPct.toFixed(3), 3)} %`);
 
-      // 내 시총/평단/수익률
       setText("iMyMcap", "-");
       setText("iMyAvg", "-");
       setText("iMyRoiPct", "-");
@@ -335,7 +391,6 @@
         }
       }
 
-      // 예측가격(구매/환매)
       updateEstimates({ priceWei: BigInt(priceWei.toString()), sellFeePct });
 
       const b = $("inpBuyAmt");
@@ -343,7 +398,6 @@
       if (b) b.oninput = () => updateEstimates({ priceWei: BigInt(priceWei.toString()), sellFeePct });
       if (s) s.oninput = () => updateEstimates({ priceWei: BigInt(priceWei.toString()), sellFeePct });
 
-      // 차트
       if (window.HEXDAO_drawPriceChart) {
         await window.HEXDAO_drawPriceChart({
           provider: rpc,
@@ -414,10 +468,8 @@
       const signer = await p.getSigner();
       const me = await signer.getAddress();
 
-      // ✅ 핵심 1) sell은 보통 "토큰을 bank가 가져감" => token approve 필요
       const tok = new ethers.Contract(t.token, cfg.abis.ERC20, signer);
 
-      // decimals 대응 (0이면 그대로, 아니면 parseUnits)
       let decTOKEN = 0;
       try { decTOKEN = Number(await tok.decimals()); } catch { decTOKEN = t.decimals ?? 0; }
 
@@ -428,7 +480,6 @@
 
       await ensureApprove(tok, me, t.bank, ethers.MaxUint256);
 
-      // ✅ 핵심 2) sell 시그니처가 2파라미터인 경우도 커버
       const sellSigs = [
         "sell(uint256 amount)",
         "sellToken(uint256 amount)",
@@ -439,7 +490,6 @@
       ];
 
       const res = await trySend(signer, t.bank, sellSigs, (sig) => {
-        // 2개 파라미터면 minRecv/minHex = 0 으로 처리
         if (sig.includes(",")) return [amt, 0];
         return [amt];
       });
@@ -548,6 +598,9 @@
   function boot() {
     const btnConnect = $("btnConnectLocal") || $("btnConnect") || $("btnWallet");
     if (btnConnect) btnConnect.onclick = connectWallet;
+
+    const btnAllowance = $("btnAllowance");
+    if (btnAllowance) btnAllowance.onclick = runAllowanceCheck;
 
     const btnBuy = $("btnBuy");
     const btnSell = $("btnSell");

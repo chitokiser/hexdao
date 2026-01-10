@@ -24,13 +24,18 @@
     butbank: "0x7a310060BcE6e5C66d8eb47E19Ea50CefB963a33",
     butTreasury: "0x47fac604B1E699E7fbE470598EF69024e8a43b7f",
 
-   exp: "0xBc619cb03c0429731AF66Ae8ccD5aeE917A6E5f4",
-   expbank: "0x6666f37F760287914d37F935220a7Ff18f076A8E",
-   expTreasury: "0xe6e1E50e1CBE7D415815785f14Ad45186F7E35a8",
+    exp: "0xBc619cb03c0429731AF66Ae8ccD5aeE917A6E5f4",
+    expbank: "0x6666f37F760287914d37F935220a7Ff18f076A8E",
+    expTreasury: "0xe6e1E50e1CBE7D415815785f14Ad45186F7E35a8",
 
-  vet: "0xff8eCA08F731EAe46b5e7d10eBF640A8Ca7BA3D4",
-  vetbank: "0xCB3AD2b01577A153884B6751E41f0c8dfbaF9E40",
-  vetTreasury: "0xE4C5C1478DD8dEb46ECeC9dB1B9508E33BEC6cF3",
+    vet: "0xff8eCA08F731EAe46b5e7d10eBF640A8Ca7BA3D4",
+    vetbank: "0xCB3AD2b01577A153884B6751E41f0c8dfbaF9E40",
+    vetTreasury: "0xE4C5C1478DD8dEb46ECeC9dB1B9508E33BEC6cF3",
+
+    // MKT (신규 토큰)
+    mkt: "0x2736e0Bab4C1b80E3A55443753F29F33475AADCB",
+    mktbank: "0xee8eDe20C6abe2eeF24A7023FCA4D079d802FdAF",
+    mktTreasury: "0xA99bcEE615437cA828963F6cB8B3DeadC66E7a2b",
   };
 
   // ERC20 최소 ABI (지갑연결/잔고/approve/allowance/decimals)
@@ -128,6 +133,17 @@
       bank: ADDR.vetbank,
       treasury: ADDR.vetTreasury,
       icon: "/assets/images/tokens/vet.png",
+      decimals: 0
+    },
+
+    {
+      key: "MKT",
+      name: "Marketing Tree",
+      symbol: "MKT",
+      token: ADDR.mkt,
+      bank: ADDR.mktbank,
+      treasury: ADDR.mktTreasury,
+      icon: "/assets/images/tokens/mkt.png",
       decimals: 0
     },
   ];

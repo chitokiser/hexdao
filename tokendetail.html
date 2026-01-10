@@ -29,6 +29,8 @@
         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
           <button class="btn" id="btnConnectLocal">지갑연결</button>
 
+          <button class="btn" id="btnAllowance" title="approve 전에 allowance를 먼저 확인하세요">승인상태(allowance) 확인</button>
+
           <img id="tokenImg" alt="token" style="width:28px;height:28px;border-radius:6px;object-fit:cover;" />
 
           <div class="mono">Token Symbol: <span id="tokenKeyText">-</span></div>
@@ -37,8 +39,19 @@
           <div class="mono">내 USDT: <span id="iMyUsdt">-</span></div>
         </div>
 
+        <!-- allowance 안내/표시 (작게) -->
+        <div style="margin-top:8px; font-size:12px; color:var(--muted); line-height:1.35;">
+          <div>
+            HEX → Bank 승인량: <span class="mono" id="iAllowHex">-</span>
+            <span style="margin:0 8px; opacity:.5;">|</span>
+            Token → Bank 승인량: <span class="mono" id="iAllowTok">-</span>
+          </div>
+          <div id="allowanceHint" style="margin-top:4px; opacity:.9;">
+            안내: 구매는 HEX 승인, 환매/스테이킹은 Token 승인이 필요합니다. 먼저 “승인상태(allowance) 확인”을 눌러 부족하면 지갑에서 approve를 완료하세요.
+          </div>
+        </div>
+
         <div style="margin-top:12px;">
-          <!-- canvas -> div (ApexCharts 필수) -->
           <div id="myChart" style="width:100%; min-height:120px;"></div>
         </div>
 
@@ -47,7 +60,12 @@
           <div class="inf"><div class="k">계약토큰잔고</div><div class="v" id="iBAL">-</div></div>
           <div class="inf"><div class="k">현재가격ROI</div><div class="v" id="iAprApy">-</div></div>
           <div class="inf"><div class="k">현재가격(HEX/Token)</div><div class="v" id="iPrice">-</div></div>
+
           <div class="inf"><div class="k">스테이킹(depo)</div><div class="v" id="iDepo">-</div></div>
+
+          <div class="inf"><div class="k">뱅크 전체스테이킹(totalStaked)</div><div class="v" id="iTotalStaked">-</div></div>
+          <div class="inf"><div class="k">구매가능 개수(전체/10)</div><div class="v" id="iBuyCap">-</div></div>
+
           <div class="inf"><div class="k">토큰1개당배당액(7일)</div><div class="v" id="iWeekly">-</div></div>
           <div class="inf"><div class="k">구매개수(totalBuy)</div><div class="v" id="iBought">-</div></div>
           <div class="inf"><div class="k">환매가능개수(참고)</div><div class="v" id="iSellable">-</div></div>
@@ -61,8 +79,6 @@
           <div class="inf"><div class="k">매도수수료</div><div class="v" id="iSellFee">-</div></div>
         </div>
       </div>
-
-
 
       <div class="form-grid">
         <div class="form-box">
@@ -105,8 +121,8 @@
     <div id="site-footer"></div>
   </div>
 
- <script src="/assets/js/header-stats.js"></script>
-<script src="/assets/js/header-wallet.js"></script>
+  <script src="/assets/js/header-stats.js"></script>
+  <script src="/assets/js/header-wallet.js"></script>
   <script src="/assets/js/chart.js"></script>
   <script src="/assets/js/tokendetail.js"></script>
 </body>

@@ -13,6 +13,7 @@
     { key: "VET",  addr: "0xff8eCA08F731EAe46b5e7d10eBF640A8Ca7BA3D4" },
     { key: "EXP",  addr: "0xBc619cb03c0429731AF66Ae8ccD5aeE917A6E5f4" },
     { key: "PUT",  addr: "0xE0fD5e1C6D832E71787BfB3E3F5cdB5dd2FD41b6" },
+    { key: "MKT",  addr: "0x2736e0Bab4C1b80E3A55443753F29F33475AADCB" },
   ];
 
   const FALLBACK_DECIMALS = {
@@ -23,6 +24,7 @@
     VET: 0,
     EXP: 0,
     PUT: 0,
+    MKT: 0,
   };
 
   const ERC20_ABI = [
@@ -99,7 +101,7 @@
     try {
       const b = await readBalances(provider, user);
       const line =
-        `USDT ${b.USDT} | HEX ${b.HEX} | HUT ${b.HUT} | BUT ${b.BUT} | VET ${b.VET} | EXP ${b.EXP} | PUT ${b.PUT}`;
+        `USDT ${b.USDT} | HEX ${b.HEX} | HUT ${b.HUT} | BUT ${b.BUT} | VET ${b.VET} | EXP ${b.EXP} | PUT ${b.PUT} | MKT ${b.MKT}`;
       setHeaderStatus(`지갑연결됨: ${shortAddr(user)} | ${line}`, true);
     } catch (e) {
       console.error(e);
