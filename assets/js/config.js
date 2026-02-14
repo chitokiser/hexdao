@@ -32,10 +32,15 @@
     vetbank: "0xCB3AD2b01577A153884B6751E41f0c8dfbaF9E40",
     vetTreasury: "0xE4C5C1478DD8dEb46ECeC9dB1B9508E33BEC6cF3",
 
-    // MKT (신규 토큰)
     mkt: "0x2736e0Bab4C1b80E3A55443753F29F33475AADCB",
     mktbank: "0xee8eDe20C6abe2eeF24A7023FCA4D079d802FdAF",
     mktTreasury: "0xA99bcEE615437cA828963F6cB8B3DeadC66E7a2b",
+
+    
+    // daina (신규 토큰)
+    daina: "0xD36Fb07b2711582650DF50e5d8c2896981D939D6",
+    dainabank: "0x8732ea996EF1527A9c1c8ed4AC71911648943304",
+    dainaTreasury: "0x555c4c43Cda2f64069fDCdB680AE662500F2EBC0",
   };
 
   // ERC20 최소 ABI (지갑연결/잔고/approve/allowance/decimals)
@@ -146,6 +151,17 @@
       icon: "/assets/images/tokens/mkt.png",
       decimals: 0
     },
+
+    {
+      key: "DAINA",
+      name: "DAINA Utility Token",
+      symbol: "DAINA",
+      token: ADDR.daina,
+      bank: ADDR.dainabank,
+      treasury: ADDR.dainaTreasury,
+      icon: "/assets/images/tokens/daina.png",
+      decimals: 0
+    },
   ];
 
   const tokenMap = {};
@@ -154,6 +170,10 @@
   window.HEXDAO_CONFIG = {
     rpcUrl,
     chain: "opbnb",
+
+    // tx 링크(옵션): UI에서 해시 클릭 시 스캔으로 이동
+    // opBNB는 bscscan의 opBNB 스캔을 사용
+    explorerTxBase: "https://opbnb.bscscan.com/tx/",
 
     // 공통 컨트랙트
     contracts: {

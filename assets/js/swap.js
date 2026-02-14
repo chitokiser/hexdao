@@ -123,8 +123,8 @@
     const key = t.key || `${t.symbol || "T"}_${i}`;
     t.key = key;
 
-    const paramName = cfg.urlTokenParam || "id";
-    const href = `tokendetail.html?${encodeURIComponent(paramName)}=${encodeURIComponent(key)}`;
+    // 모든 토큰을 전용페이지로 통일 (예: hut.html, put.html, daina.html)
+    const href = `${String(key).toLowerCase()}.html`;
 
     return `
       <tr style="border-bottom:1px solid #e7e7e7;">

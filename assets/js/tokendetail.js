@@ -15,6 +15,30 @@
     else if ($("status")) setText("status", `상태: ${msg}`);
   }
 
+  // --- 2-step approve UX helpers ---
+  function txLink(hash) {
+    const base = cfg.explorerTxBase || "";
+    if (!hash) return "";
+    if (!base) return hash;
+    return `<a href="${base}${hash}" target="_blank" rel="noopener">${hash}</a>`;
+  }
+
+  function setFlow(prefix, stepText, msgText, hash) {
+    if (!prefix) return;
+    const stepEl = $(`${prefix}Step`);
+    const msgEl = $(`${prefix}Msg`);
+    const hashEl = $(`${prefix}Hash`);
+    if (stepEl) stepEl.textContent = stepText || "";
+    if (msgEl) msgEl.textContent = msgText || "";
+    if (hashEl) hashEl.innerHTML = hash ? `tx: ${txLink(hash)}` : "";
+  }
+
+  function setBtnBusy(btn, isBusy, idleLabel) {
+    if (!btn) return;
+    btn.disabled = !!isBusy;
+    if (!isBusy && idleLabel) btn.textContent = idleLabel;
+  }
+
   function trimDecimals(str, maxFrac = 6) {
     const s = String(str);
     if (!s.includes(".")) return s;
@@ -93,14 +117,48 @@
     return { ok: false };
   }
 
+  async function approveIfNeeded({ erc20, owner, spender, needAmount, flowPrefix, actionLabel, btn }) {
+    const cur = await erc20.allowance(owner, spender);
+    if (cur >= needAmount) {
+      setFlow(flowPrefix, "승인 OK", `${actionLabel} 실행 시 지갑 서명 1회만 뜹니다.`, "");
+      return { didApprove: false };
+    }
+
+    setFlow(flowPrefix, "1/2 승인 필요", `먼저 승인(approve) 서명이 뜹니다. 완료되면 2/2 ${actionLabel} 서명이 이어집니다.`, "");
+    setStatus(`1/2 승인(approve) 진행 중… 지갑에서 승인 서명을 확인하세요.`);
+    setBtnBusy(btn, true);
+
+    try {
+      let tx;
+      try {
+        tx = await erc20.approve(spender, ethers.MaxUint256);
+      } catch {
+        // 일부 토큰은 approve(0) -> approve(Max) 패턴이 필요
+        try {
+          const tx0 = await erc20.approve(spender, 0);
+          setFlow(flowPrefix, "1/2 승인(초기화)", `승인 초기화 tx 전송됨. 채굴 후 다시 승인을 진행합니다.`, tx0.hash);
+          await tx0.wait();
+        } catch {}
+        tx = await erc20.approve(spender, ethers.MaxUint256);
+      }
+
+      setFlow(flowPrefix, "1/2 승인 전송", `승인 tx가 전송되었습니다. 채굴(확정)까지 잠시 기다려 주세요.`, tx.hash);
+      await tx.wait();
+      setFlow(flowPrefix, "1/2 승인 완료", `승인이 완료되었습니다. 이제 2/2 ${actionLabel} 서명이 뜹니다.`, tx.hash);
+      setStatus(`1/2 승인 완료. 이제 2/2 ${actionLabel}를 진행합니다…`);
+      return { didApprove: true, approveHash: tx.hash };
+    } finally {
+      setBtnBusy(btn, false);
+    }
+  }
+
+  // 기존 함수명 호환 (다른 코드에서 쓰던 호출을 깨지 않기 위해 유지)
   async function ensureApprove(erc20, owner, spender, needAmount) {
     const cur = await erc20.allowance(owner, spender);
     if (cur >= needAmount) return;
-
     try {
-      const tx1 = await erc20.approve(spender, ethers.MaxUint256);
-      await tx1.wait();
-      return;
+      const tx = await erc20.approve(spender, ethers.MaxUint256);
+      await tx.wait();
     } catch {
       try {
         const tx0 = await erc20.approve(spender, 0);
@@ -143,6 +201,20 @@
       if (hint) {
         hint.textContent = "안내: 구매는 HEX 승인, 환매/스테이킹은 Token 승인이 필요합니다. 부족하면 지갑에서 approve를 먼저 완료한 뒤 실행하세요.";
       }
+
+      // 2-step UI 힌트 동기화
+      try {
+        if (aHex > 0n) setFlow("flowBuy", "승인 OK", "구매 실행 시 지갑 서명 1회만 뜹니다.", "");
+        else setFlow("flowBuy", "승인 필요", "구매 전에 HEX 승인이 필요합니다(1/2 승인 → 2/2 구매).", "");
+
+        if (aTok > 0n) {
+          setFlow("flowSell", "승인 OK", "환매 실행 시 지갑 서명 1회만 뜹니다.", "");
+          setFlow("flowStake", "승인 OK", "스테이킹 실행 시 지갑 서명 1회만 뜹니다.", "");
+        } else {
+          setFlow("flowSell", "승인 필요", "환매 전에 Token 승인이 필요합니다(1/2 승인 → 2/2 환매).", "");
+          setFlow("flowStake", "승인 필요", "스테이킹 전에 Token 승인이 필요합니다(1/2 승인 → 2/2 스테이킹).", "");
+        }
+      } catch {}
 
       setStatus("allowance 확인 완료");
     } catch (e) {
@@ -423,34 +495,79 @@
     const amt = parseIntSafe($("inpBuyAmt")?.value);
     if (amt <= 0) return setStatus("구매 수량을 입력하세요.");
 
+    const btnBuy = $("btnBuy");
     try {
       const p = await getBrowserProvider();
       await p.send("eth_requestAccounts", []);
       const signer = await p.getSigner();
       const me = await signer.getAddress();
 
+      // bank 가격 읽기(승인 필요 수량 계산용)
+      let priceWei = 0n;
+      try {
+        const bankRead = new ethers.Contract(t.bank, ["function price() view returns (uint256)"], signer);
+        priceWei = BigInt((await bankRead.price()).toString());
+      } catch {}
+
+      const payWei = priceWei > 0n ? (BigInt(amt) * priceWei) : 0n;
+
       const hex = new ethers.Contract(cfg.contracts.hex, cfg.abis.ERC20, signer);
-      await ensureApprove(hex, me, t.bank, ethers.MaxUint256);
-
-      const buySigs = [
-        "buy(uint256 amount,uint256 maxPay)",
-        "buy(uint256 amount)",
-        "buyToken(uint256 amount,uint256 maxPay)",
-        "buyToken(uint256 amount)"
-      ];
-
-      const res = await trySend(signer, t.bank, buySigs, (sig) => {
-        if (sig.includes(",uint256 maxPay")) return [amt, ethers.MaxUint256];
-        return [amt];
+      await approveIfNeeded({
+        erc20: hex,
+        owner: me,
+        spender: t.bank,
+        // 실제 필요 수량(payWei) 기준으로 승인 여부 판단 (매번 2번 서명 뜨는 혼란 방지)
+        needAmount: payWei > 0n ? payWei : 1n,
+        flowPrefix: "flowBuy",
+        actionLabel: "구매",
+        btn: btnBuy
       });
 
-      if (!res.ok) return setStatus("구매 실패: buy 함수가 컨트랙트와 다릅니다.");
+      setFlow("flowBuy", "2/2 구매", "이제 구매(buy) 서명이 뜹니다. 지갑에서 확인하세요.", "");
+      setStatus("2/2 구매 진행 중… 지갑에서 구매 서명을 확인하세요.");
+      setBtnBusy(btnBuy, true);
 
-      setStatus(`구매 완료: ${res.hash}`);
+      // 우선: 표준 시그니처로 직접 호출 (대부분의 bank가 동일 시그니처)
+      try {
+        const bank = new ethers.Contract(t.bank, [
+          "function buy(uint256 amount,uint256 maxPay) returns (bool)"
+        ], signer);
+
+        const tx = await bank.buy(amt, ethers.MaxUint256);
+        setFlow("flowBuy", "2/2 구매 전송", "구매 tx가 전송되었습니다. 채굴(확정) 완료 후 잔고/가격이 갱신됩니다.", tx.hash);
+        await tx.wait();
+        setStatus(`구매 완료: ${tx.hash}`);
+      } catch (e) {
+        // 표준 호출 실패 시에만 시그니처 후보를 순회 (구형/다른 구현 대비)
+        const buySigs = [
+          "buy(uint256 amount,uint256 maxPay)",
+          "buy(uint256 amount)",
+          "buyToken(uint256 amount,uint256 maxPay)",
+          "buyToken(uint256 amount)"
+        ];
+
+        const res = await trySend(signer, t.bank, buySigs, (sig) => {
+          if (sig.includes(",uint256 maxPay")) return [amt, ethers.MaxUint256];
+          return [amt];
+        });
+
+        if (!res.ok) {
+          const reason = e?.shortMessage || e?.reason || e?.message || "컨트랙트 require/revert 또는 시그니처 불일치";
+          setFlow("flowBuy", "2/2 구매 실패", `실패 사유: ${reason}`,
+            e?.transactionHash || e?.hash || "");
+          return setStatus(`구매 실패: ${reason}`);
+        }
+
+        setFlow("flowBuy", "2/2 구매 전송", "구매 tx가 전송되었습니다. 채굴(확정) 완료 후 잔고/가격이 갱신됩니다.", res.hash);
+        setStatus(`구매 완료: ${res.hash}`);
+      }
       await refreshAll();
     } catch (e) {
       console.error(e);
+      setFlow("flowBuy", "실패", "지갑에서 거절했거나 트랜잭션이 실패했습니다.", "");
       setStatus(`구매 실패: ${e?.shortMessage || e?.message || e}`);
+    } finally {
+      setBtnBusy(btnBuy, false, "구매");
     }
   }
 
@@ -462,6 +579,7 @@
     const amtInput = parseIntSafe($("inpSellAmt")?.value);
     if (amtInput <= 0) return setStatus("환매 수량을 입력하세요.");
 
+    const btnSell = $("btnSell");
     try {
       const p = await getBrowserProvider();
       await p.send("eth_requestAccounts", []);
@@ -478,7 +596,20 @@
           ? BigInt(amtInput)
           : ethers.parseUnits(String(amtInput), decTOKEN);
 
-      await ensureApprove(tok, me, t.bank, ethers.MaxUint256);
+      await approveIfNeeded({
+        erc20: tok,
+        owner: me,
+        spender: t.bank,
+        // 실제 필요 수량(amt) 기준으로 승인 여부 판단
+        needAmount: amt,
+        flowPrefix: "flowSell",
+        actionLabel: "환매",
+        btn: btnSell
+      });
+
+      setFlow("flowSell", "2/2 환매", "이제 환매(sell) 서명이 뜹니다. 지갑에서 확인하세요.", "");
+      setStatus("2/2 환매 진행 중… 지갑에서 환매 서명을 확인하세요.");
+      setBtnBusy(btnSell, true);
 
       const sellSigs = [
         "sell(uint256 amount)",
@@ -494,13 +625,20 @@
         return [amt];
       });
 
-      if (!res.ok) return setStatus("환매 실패: sell 함수 시그니처가 컨트랙트와 다릅니다(또는 내부 require revert).");
+      if (!res.ok) {
+        setFlow("flowSell", "2/2 환매 실패", "sell 함수 시그니처가 컨트랙트와 다릅니다(또는 내부 require revert).", "");
+        return setStatus("환매 실패: sell 함수 시그니처가 컨트랙트와 다릅니다(또는 내부 require revert).");
+      }
 
+      setFlow("flowSell", "2/2 환매 전송", "환매 tx가 전송되었습니다. 채굴(확정) 완료 후 잔고가 갱신됩니다.", res.hash);
       setStatus(`환매 완료: ${res.hash}`);
       await refreshAll();
     } catch (e) {
       console.error(e);
+      setFlow("flowSell", "실패", "지갑에서 거절했거나 트랜잭션이 실패했습니다.", "");
       setStatus(`환매 실패: ${e?.shortMessage || e?.message || e}`);
+    } finally {
+      setBtnBusy(btnSell, false, "환매");
     }
   }
 
@@ -512,6 +650,7 @@
     const amt = parseIntSafe($("inpStakeAmt")?.value);
     if (amt <= 0) return setStatus("스테이킹 수량을 입력하세요.");
 
+    const btnStake = $("btnStake");
     try {
       const p = await getBrowserProvider();
       await p.send("eth_requestAccounts", []);
@@ -519,7 +658,20 @@
       const me = await signer.getAddress();
 
       const tok = new ethers.Contract(t.token, cfg.abis.ERC20, signer);
-      await ensureApprove(tok, me, t.bank, ethers.MaxUint256);
+      await approveIfNeeded({
+        erc20: tok,
+        owner: me,
+        spender: t.bank,
+        // 실제 필요 수량(amt) 기준으로 승인 여부 판단
+        needAmount: BigInt(amt),
+        flowPrefix: "flowStake",
+        actionLabel: "스테이킹",
+        btn: btnStake
+      });
+
+      setFlow("flowStake", "2/2 스테이킹", "이제 스테이킹(stake/deposit) 서명이 뜹니다. 지갑에서 확인하세요.", "");
+      setStatus("2/2 스테이킹 진행 중… 지갑에서 스테이킹 서명을 확인하세요.");
+      setBtnBusy(btnStake, true);
 
       const stakeSigs = [
         "stake(uint256 amount)",
@@ -528,14 +680,21 @@
       ];
 
       const res = await trySend(signer, t.bank, stakeSigs, () => [amt]);
-      if (!res.ok) return setStatus("스테이킹 실패: stake/deposit 함수가 컨트랙트와 다릅니다.");
+      if (!res.ok) {
+        setFlow("flowStake", "2/2 스테이킹 실패", "stake/deposit 함수가 컨트랙트와 다릅니다(또는 내부 require revert).", "");
+        return setStatus("스테이킹 실패: stake/deposit 함수가 컨트랙트와 다릅니다.");
+      }
 
+      setFlow("flowStake", "2/2 스테이킹 전송", "스테이킹 tx가 전송되었습니다. 채굴(확정) 완료 후 정보가 갱신됩니다.", res.hash);
       setText("stakeResult", `성공: ${res.hash}`);
       setStatus("스테이킹 완료");
       await refreshAll();
     } catch (e) {
       console.error(e);
+      setFlow("flowStake", "실패", "지갑에서 거절했거나 트랜잭션이 실패했습니다.", "");
       setStatus(`스테이킹 실패: ${e?.shortMessage || e?.message || e}`);
+    } finally {
+      setBtnBusy(btnStake, false, "스테이킹");
     }
   }
 

@@ -1,10 +1,10 @@
-<!-- /tokendetail.html -->
+<!-- /daina.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Token Detail</title>
+  <title>DAINA · 토큰 전용페이지</title>
 
   <link rel="stylesheet" href="/assets/css/app.css"/>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.14.0/dist/ethers.umd.min.js"></script>
@@ -14,13 +14,31 @@
 
   <script src="/assets/js/config.js"></script>
   <script src="/assets/js/partials.js"></script>
+
+  <script>
+    // /daina.html
+    // 이 페이지는 DAINA 전용페이지입니다.
+    // tokendetail.js가 URL 파라미터를 읽어서 토큰을 선택하므로, 파라미터가 없으면 자동으로 붙여줍니다.
+    (function () {
+      try {
+        var cfg = window.HEXDAO_CONFIG || {};
+        var param = cfg.urlTokenParam || 'token';
+        var u = new URL(location.href);
+        var cur = (u.searchParams.get(param) || '').toUpperCase();
+        if (cur !== 'DAINA') {
+          u.searchParams.set(param, 'DAINA');
+          location.replace(u.toString());
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
   <div class="page">
     <div id="site-header"></div>
 
     <div class="main-wrap">
-      <div class="block-title" id="tokenTitle">토큰 전용페이지</div>
+      <div class="block-title" id="tokenTitle">DAINA 전용페이지</div>
       <div class="block-text">지갑연결해야 아래 정보가 표시됩니다. (구매/환매/스테이킹 실행 시 지갑에서 확인 필요)</div>
 
       <div class="hr"></div>
