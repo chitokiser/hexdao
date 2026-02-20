@@ -109,6 +109,42 @@
     }
   }
 
+  // opBNB 자동 전환 시도: 메타마스크/라비 등 EIP-1193 지갑에서 체인 스위치/추가 요청
+  async function ensureOpBNB() {
+    if (!window.ethereum || !window.ethereum.request) throw new Error('지갑 인터페이스가 없습니다');
+    try {
+      const chainId = String(await window.ethereum.request({ method: 'eth_chainId' })).toLowerCase();
+      if (chainId === '0xcc') return; // 이미 opBNB
+
+      try {
+        await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0xCC' }] });
+        return;
+      } catch (switchErr) {
+        // 4902: 체인이 지갑에 등록되어 있지 않음 -> 추가 시도
+        const code = switchErr && (switchErr.code || switchErr.errorCode);
+        if (code === 4902 || /Unrecognized chain|is not available/.test(String(switchErr.message || ''))) {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0xCC',
+              chainName: 'opBNB Mainnet',
+              nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+              rpcUrls: ['https://rpc.ankr.com/opbnb'],
+              blockExplorerUrls: ['https://opbnbscan.com/']
+            }]
+          });
+          // 추가 후 스위치 재시도
+          await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0xCC' }] });
+          return;
+        }
+        throw switchErr;
+      }
+    } catch (e) {
+      console.error('ensureOpBNB 실패', e);
+      throw new Error('opBNB 네트워크로 전환 실패: ' + (e?.message || e));
+    }
+  }
+
   async function connect() {
     if (!window.ethereum) {
       alert("지갑(메타마스크/라비)을 설치해주세요.");
@@ -119,6 +155,14 @@
 
     try {
       await provider.send("eth_requestAccounts", []);
+      // 시도: 연결 직후 opBNB 메인넷으로 자동 전환
+      try {
+        await ensureOpBNB();
+      } catch (e) {
+        console.error(e);
+        alert(e?.message || 'opBNB 네트워크로 전환할 수 없습니다. 지갑에서 수동으로 변경해주세요.');
+        return;
+      }
       const signer = await provider.getSigner();
       const user = await signer.getAddress();
       await render(provider, user);
