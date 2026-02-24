@@ -26,9 +26,36 @@ async function loadPartial(targetId, url) {
   }
 }
 
+function initHamburger() {
+  const btn = document.getElementById("hamburgerBtn");
+  const mobileNav = document.getElementById("topNavMobile");
+  if (!btn || !mobileNav) return;
+
+  function setOpen(open) {
+    mobileNav.style.display = open ? "block" : "none";
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  btn.addEventListener("click", function () {
+    const open = mobileNav.style.display !== "none" && mobileNav.style.display !== "";
+    setOpen(!open);
+  });
+
+  window.addEventListener("resize", function () {
+    if (window.innerWidth > 700) setOpen(false);
+  });
+
+  document.addEventListener("click", function (e) {
+    if (window.innerWidth > 700) return;
+    if (!mobileNav.contains(e.target) && !btn.contains(e.target)) setOpen(false);
+  });
+}
+
 async function bootPartials() {
   await loadPartial("site-header", "/partials/head.html");
   await loadPartial("site-footer", "/partials/footer.html");
+
+  initHamburger();
 
   // 헤더/푸터 로드 완료 이벤트
   window.dispatchEvent(new CustomEvent("partials:loaded"));
