@@ -41,6 +41,11 @@
     daina: "0xD36Fb07b2711582650DF50e5d8c2896981D939D6",
     dainabank: "0x8732ea996EF1527A9c1c8ed4AC71911648943304",
     dainaTreasury: "0x555c4c43Cda2f64069fDCdB680AE662500F2EBC0",
+
+    // jump (신규 토큰)
+    jump: "0xA3C35c52446C133b7211A743c6D47470D1385601",
+    jumpbank: "0x16752f8948ff2caA02e756c7C8fF0E04887A3a0E",
+    jumpTreasury: "0xe1f4cDc794D22C23fa47E768dD86Ad09aeEb0312",
   };
 
   // ERC20 최소 ABI (지갑연결/잔고/approve/allowance/decimals)
@@ -160,6 +165,17 @@
       bank: ADDR.dainabank,
       treasury: ADDR.dainaTreasury,
       icon: "/assets/images/tokens/daina.png",
+      decimals: 0
+    },
+
+    {
+      key: "JUMP",
+      name: "JUMP Utility Token",
+      symbol: "JUMP",
+      token: ADDR.jump,
+      bank: ADDR.jumpbank,
+      treasury: ADDR.jumpTreasury,
+      icon: "/assets/images/tokens/jump.png",
       decimals: 0
     },
   ];
