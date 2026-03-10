@@ -73,13 +73,10 @@
 
   // ── Jump API: 트랜잭션 서명 + 브로드캐스트 ──────────────────────────────
   async function apiSignTransaction(idToken, tx) {
-    const body = { idToken, tx, apiKey: JUMP_API_KEY };
-    console.log('[Jump] signTransaction 요청 body:', JSON.stringify(body));
-    console.log('[Jump] JUMP_API_KEY 앞 8자:', JUMP_API_KEY.slice(0, 8));
     const res = await fetch(JUMP_API + '/signTransaction', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Api-Key': JUMP_API_KEY },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ idToken, tx, apiKey: JUMP_API_KEY }),
     });
     if (!res.ok) {
       const txt = await res.text().catch(() => '');
