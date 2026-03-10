@@ -3,6 +3,90 @@
 (() => {
   const $ = (id) => document.getElementById(id);
 
+  // ── JumpSigner: Jump 수탁 지갑용 ethers.js v6 커스텀 서명자 ────────────
+  // 잔액 조회·표시는 완전히 동작합니다.
+  // 트랜잭션 서명(approve, swap 등)은 Jump API에 /signTransaction 엔드포인트가
+  // 추가되면 signTransaction() 내부를 구현하면 됩니다.
+  class JumpSigner extends ethers.AbstractSigner {
+    constructor(jumpWallet, provider) {
+      super(provider);
+      this._j = jumpWallet;
+    }
+
+    async getAddress() {
+      return this._j.address;
+    }
+
+    // personal_sign 방식 메시지 서명 (Jump /signMessage 사용)
+    async signMessage(message) {
+      const msg = typeof message === 'string'
+        ? message
+        : ethers.hexlify(message);
+      if (msg.length > 200) throw new Error('Jump signMessage: 200자를 초과할 수 없습니다.');
+      const result = await this._j.signMsg(msg);
+      return result.signature;
+    }
+
+    async signTransaction(_tx) {
+      throw new Error('Jump: signTransaction은 sendTransaction을 통해 처리됩니다.');
+    }
+
+    async sendTransaction(tx) {
+      const token = await this._j.getIdToken();
+
+      // calldata 디코딩 → Jump API contract 타입으로 변환
+      const IFACE = new ethers.Interface([
+        'function approve(address spender, uint256 amount) returns (bool)',
+        'function depositUSDT(uint256 amount)',
+        'function redeemHEX(uint256 amount)',
+      ]);
+
+      let jumpTx;
+      try {
+        const decoded = IFACE.parseTransaction({ data: tx.data || '0x' });
+        const args = decoded.args.map((a) => a.toString());
+        jumpTx = {
+          type:   'contract',
+          to:     tx.to,
+          abi:    [decoded.fragment.format('full')],
+          method: decoded.name,
+          args,
+        };
+      } catch {
+        throw new Error('Jump: 지원하지 않는 트랜잭션 형식입니다. calldata: ' + (tx.data || '0x').slice(0, 10));
+      }
+
+      console.log('[Jump] sendTransaction 요청:', JSON.stringify(jumpTx));
+      const result = await window.jumpSignTx(token, jumpTx);
+      console.log('[Jump] sendTransaction 응답:', JSON.stringify(result));
+
+      const txHash = result?.data?.txHash || result?.txHash;
+      if (!txHash) throw new Error('Jump sendTransaction: txHash 없음. 응답: ' + JSON.stringify(result));
+
+      const provider = this.provider;
+      return {
+        hash: txHash,
+        wait: async (confirms = 1) => {
+          let receipt = null;
+          while (!receipt || receipt.confirmations < confirms) {
+            await new Promise((r) => setTimeout(r, 2000));
+            receipt = await provider.getTransactionReceipt(txHash).catch(() => null);
+          }
+          return receipt;
+        },
+      };
+    }
+
+    async signTypedData(_domain, _types, _value) {
+      throw new Error('Jump 수탁 지갑은 signTypedData를 지원하지 않습니다.');
+    }
+
+    connect(provider) {
+      return new JumpSigner(this._j, provider);
+    }
+  }
+  // ────────────────────────────────────────────────────────────────────────
+
   function setStatus(msg) {
     const el = $("status");
     if (el) el.textContent = "상태: " + msg;
@@ -77,6 +161,23 @@
     try {
       getCfg();
 
+      // ── Jump 수탁 지갑 (Google 로그인 완료된 경우) ────────────────────
+      if (window.jumpWallet) {
+        user = window.jumpWallet.address;
+        console.log('[HEX] Jump 지갑 주소:', user);
+        if (!user) {
+          setStatus('Jump 지갑 주소 없음 - 콘솔에서 verifyUser 응답 확인 필요');
+          return;
+        }
+        const provider = window.__jumpProvider
+          || new ethers.JsonRpcProvider(getCfg().rpcUrl);
+        signer = new JumpSigner(window.jumpWallet, provider);
+        await refreshWalletButtons();
+        setStatus('Jump 수탁 지갑 연결: ' + user.slice(0, 6) + '...' + user.slice(-4));
+        return;
+      }
+
+      // ── MetaMask / Rabby 개인 지갑 ────────────────────────────────────
       if (!window.ethereum) {
         alert("지갑이 필요합니다. MetaMask/Rabby 설치 후 다시 시도하세요.");
         return;
@@ -195,8 +296,15 @@
     updateEst();
   }
 
+  window.__hexdaoConnect = connect;
+
   window.addEventListener("partials:loaded", () => {
     bindConnectButton();
+  });
+
+  window.addEventListener("jump:connected", () => {
+    console.log('[HEX] jump:connected → jumpWallet:', window.jumpWallet);
+    connect().catch((e) => console.error('[HEX] connect() 실패:', e));
   });
 
   document.addEventListener("DOMContentLoaded", () => {
